@@ -5,13 +5,16 @@ output: html_notebook
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-```{r include=TRUE, echo=TRUE, results='markup'}
-# Load necessary libraries
-library(dplyr)
-library(ggplot2)
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
-# Load dataset
+```{r include=TRUE, echo=TRUE, results='markup'}
 salaries <- read.csv('data_science_salaries.csv')
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+sum(is.na(salaries))
+colSums(is.na(salaries))
+rowSums(is.na(salaries))
+salaries[!complete.cases(salaries), ] 
 
 # Display first few rows
 head(salaries)
@@ -42,6 +45,11 @@ find_outliers <- function(column) {
 outliers_salary <- find_outliers(salaries$salary)
 outliers_salary_usd <- find_outliers(salaries$salary_in_usd)
 
+<<<<<<<<< Temporary merge branch 1
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+=========
 # Display the outliers
 list(Salary_Outliers = outliers_salary, Salary_USD_Outliers = outliers_salary_usd)
 
@@ -78,5 +86,6 @@ ggplot(salaries, aes(y = salary)) +
 ggplot(salaries, aes(y = salary_in_usd)) +
   geom_boxplot(fill = "lightblue", outlier.color = "red") +
   labs(title = "Boxplot of Salary in USD", y = "Salary in USD")
+>>>>>>>>> Temporary merge branch 2
 
 ```
