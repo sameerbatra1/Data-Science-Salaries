@@ -7,7 +7,7 @@
 
 | **Person**  | **Task**  | **Time Needed**  | **Status/Backup Plan**  |
 |------------|--------------------------------------|----------------|---------------------------------|
-| **Person 1 (Yeobi)**  | 📝 Write Topic Proposal  + Create R Markdown Template  | **1-3 hour**  | If incomplete, whoever finishes their task first helps out  |
+| **Person 1 (start)**  | 📝 Write Topic Proposal  + Create R Markdown Template  | **1-3 hour**  | If incomplete, whoever finishes their task first helps out  |
 | **Person 2 (EDA Expert)**  | 📊 Perform Exploratory Data Analysis (EDA) + Create Graphs/Visuals  | **1-3 hours**  | If incomplete, whoever finishes their task first helps out  |
 | **Person 3 (Presentation Specialist)**  | 🎤 Create Presentation Slides + Prepare Speaker Notes  | **1-3 hours**  | If incomplete, whoever finishes their task first helps out  |
 | **Person 4 (Research Writer)**  | 📄 Write Research Paper Summary (4,000 words max)  | **1-3 hours**  | If incomplete, whoever finishes their task first helps out  |
