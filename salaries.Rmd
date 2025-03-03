@@ -5,18 +5,81 @@ output: html_notebook
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
 ```{r include=TRUE, echo=TRUE, results='markup'}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Load dataset
 salaries <- read.csv('data_science_salaries.csv')
-salaries
+
+# Display first few rows
+head(salaries)
+
+# Select only the two numerical columns: salary and salary_in_usd
+numeric_cols <- salaries %>% select(salary, salary_in_usd)
+summary(numeric_cols)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+###Detecting Outliers Using IQR (Boxplot Method)
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Function to find outliers using IQR
+find_outliers <- function(column) {
+  Q1 <- quantile(column, 0.25, na.rm = TRUE)
+  Q3 <- quantile(column, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  
+  # Define lower and upper bounds
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  
+  # Identify outliers
+  outliers <- column[column < lower_bound | column > upper_bound]
+  return(outliers)
+}
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+# Apply function to salary and salary_in_usd
+outliers_salary <- find_outliers(salaries$salary)
+outliers_salary_usd <- find_outliers(salaries$salary_in_usd)
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+# Display the outliers
+list(Salary_Outliers = outliers_salary, Salary_USD_Outliers = outliers_salary_usd)
+
+```
+
+###Detecting Outliers Using Z-Score Method
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Function to find outliers using Z-score
+find_outliers_zscore <- function(column) {
+  threshold <- 3  # Outliers are values more than 3 standard deviations from the mean
+  z_scores <- (column - mean(column, na.rm = TRUE)) / sd(column, na.rm = TRUE)
+  outliers <- column[abs(z_scores) > threshold]
+  return(outliers)
+}
+
+# Apply function to salary and salary_in_usd
+zscore_outliers_salary <- find_outliers_zscore(salaries$salary)
+zscore_outliers_salary_usd <- find_outliers_zscore(salaries$salary_in_usd)
+
+# Display the outliers
+list(Salary_ZScore_Outliers = zscore_outliers_salary, Salary_USD_ZScore_Outliers = zscore_outliers_salary_usd)
+
+```
+
+###Visualizing Outliers with Boxplots
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Boxplot for Salary
+ggplot(salaries, aes(y = salary)) +
+  geom_boxplot(fill = "lightblue", outlier.color = "red") +
+  labs(title = "Boxplot of Salary", y = "Salary")
+
+# Boxplot for Salary in USD
+ggplot(salaries, aes(y = salary_in_usd)) +
+  geom_boxplot(fill = "lightblue", outlier.color = "red") +
+  labs(title = "Boxplot of Salary in USD", y = "Salary in USD")
+
+```
 
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
