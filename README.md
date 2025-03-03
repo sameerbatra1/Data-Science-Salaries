@@ -15,6 +15,11 @@
 ✅ **Goal:** Complete this project in **6 hours**  
 ✅ **GitHub will be used to track progress**  
 ✅ **All updates should be committed regularly**  
+##this is googole doc for Research Writer
+###https://docs.google.com/document/d/1TonihM2pEICN_JhDjw1G4cQPScTqqWj9scFf5tIRjkU/edit?usp=sharing
+
+##this is google slide for Presentation Specialist
+###https://docs.google.com/presentation/d/1pacPVto4HirA-xvTX8rja7oJNskwn6SxyIGb7SHFtUA/edit?usp=sharing
 
 --
 
