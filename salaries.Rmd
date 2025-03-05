@@ -8,9 +8,10 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
+library(dplyr)
+library(ggplot2)
 salaries <- read.csv('data_science_salaries.csv')
 
-```{r include=TRUE, echo=TRUE, results='markup'}
 sum(is.na(salaries))
 colSums(is.na(salaries))
 rowSums(is.na(salaries))
@@ -18,16 +19,45 @@ salaries[!complete.cases(salaries), ]
 
 # Display first few rows
 head(salaries)
-
-# Select only the two numerical columns: salary and salary_in_usd
-numeric_cols <- salaries %>% select(salary, salary_in_usd)
-summary(numeric_cols)
 ```
+```{r include=True, echo=TRUE, results='markup'}
+str(salaries)
+```
+```{r include=True, echo=False, results='markup'}
+summary(salaries)
+```
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Create the grouped dataframe
+country_counts <- as.data.frame(table(salaries$employee_residence))
+colnames(country_counts) <- c("Country", "Frequency")
 
+# Arrange by Frequency in ascending order
+country_counts <- country_counts[order(country_counts$Frequency, decreasing = TRUE), ]
+
+# View the result
+country_counts
+
+# Create the barplot
+ggplot(country_counts, aes(x = reorder(Country, -Frequency), y = Frequency)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Frequency of Employee Residence by Country",
+       x = "Country",
+       y = "Frequency") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```{r include=TRUE, echo=TRUE, results='markup'}
+us_residents_df <- subset(salaries, employee_residence == "United States")
+
+#Since we are only working with us_residents dataframe we need to delete salary, salary_currency
+us_residents_df <- subset(us_residents_df, select= -c(employee_residence, salary, salary_currency))
+
+us_residents_df
+```
 ###Detecting Outliers Using IQR (Boxplot Method)
 ```{r include=TRUE, echo=TRUE, results='markup'}
-# Function to find outliers using IQR
-find_outliers <- function(column) {
+# Function to find outliers using IQR and return entire rows
+find_outliers <- function(data, column_name) {
+  column <- data[[column_name]]
   Q1 <- quantile(column, 0.25, na.rm = TRUE)
   Q3 <- quantile(column, 0.75, na.rm = TRUE)
   IQR <- Q3 - Q1
@@ -36,56 +66,331 @@ find_outliers <- function(column) {
   lower_bound <- Q1 - 1.5 * IQR
   upper_bound <- Q3 + 1.5 * IQR
   
-  # Identify outliers
-  outliers <- column[column < lower_bound | column > upper_bound]
+  # Identify outliers (rows where the value is outside the bounds)
+  outliers <- data[column < lower_bound | column > upper_bound, ]
   return(outliers)
 }
 
-# Apply function to salary and salary_in_usd
-outliers_salary <- find_outliers(salaries$salary)
-outliers_salary_usd <- find_outliers(salaries$salary_in_usd)
+# Apply function to find outliers in salary and salary_in_usd columns
+outliers_salary_usd <- find_outliers(us_residents_df, "salary_in_usd")
 
-<<<<<<<<< Temporary merge branch 1
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
-
-
-=========
 # Display the outliers
-list(Salary_Outliers = outliers_salary, Salary_USD_Outliers = outliers_salary_usd)
+list(Salary_USD_Outliers = outliers_salary_usd)
 
 ```
 
-###Detecting Outliers Using Z-Score Method
 
-```{r include=TRUE, echo=TRUE, results='markup'}
-# Function to find outliers using Z-score
-find_outliers_zscore <- function(column) {
-  threshold <- 3  # Outliers are values more than 3 standard deviations from the mean
-  z_scores <- (column - mean(column, na.rm = TRUE)) / sd(column, na.rm = TRUE)
-  outliers <- column[abs(z_scores) > threshold]
-  return(outliers)
-}
-
-# Apply function to salary and salary_in_usd
-zscore_outliers_salary <- find_outliers_zscore(salaries$salary)
-zscore_outliers_salary_usd <- find_outliers_zscore(salaries$salary_in_usd)
-
-# Display the outliers
-list(Salary_ZScore_Outliers = zscore_outliers_salary, Salary_USD_ZScore_Outliers = zscore_outliers_salary_usd)
-
-```
 
 ###Visualizing Outliers with Boxplots
 ```{r include=TRUE, echo=TRUE, results='markup'}
-# Boxplot for Salary
-ggplot(salaries, aes(y = salary)) +
-  geom_boxplot(fill = "lightblue", outlier.color = "red") +
-  labs(title = "Boxplot of Salary", y = "Salary")
 
 # Boxplot for Salary in USD
-ggplot(salaries, aes(y = salary_in_usd)) +
+ggplot(us_residents_df, aes(y = salary_in_usd)) +
   geom_boxplot(fill = "lightblue", outlier.color = "red") +
   labs(title = "Boxplot of Salary in USD", y = "Salary in USD")
->>>>>>>>> Temporary merge branch 2
 
 ```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+outliers_salary_usd
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+# Get the indices of the rows with outliers in salary and salary_in_usd
+outlier_rows_salary_usd <- which(us_residents_df$salary_in_usd %in% outliers_salary_usd$salary_in_usd)
+
+# Remove outliers from the original dataset using subset
+cleaned_salaries <- us_residents_df[-outlier_rows_salary_usd, ]
+cleaned_salaries
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+## Get the indices of the rows with outliers in salary and salary_in_usd
+#outlier_rows_salary <- which(salaries$salary %in% outliers_salary$salary)
+#outlier_rows_salary_usd <- which(salaries$salary_in_usd %in% outliers_salary_usd$salary_in_usd)
+
+# Combine the indices of both outliers
+#outlier_rows <- unique(c(outlier_rows_salary, outlier_rows_salary_usd))
+
+# Remove outliers from the original dataset using subset
+#cleaned_salaries <- salaries[-outlier_rows, ]
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+cleaned_salaries
+```
+After removing the outliers, there are 5215 values in the dataframe. This means that 90 values were outliers.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+ggplot(cleaned_salaries, aes(y = salary_in_usd)) +
+  geom_boxplot(fill = "lightblue", outlier.color = "red") +
+  labs(title = "Boxplot of Salary in usd", y = "Salary")
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Count occurrences of each job_title
+#job_title_counts <- table(cleaned_salaries$job_title)
+#job_title_counts
+# Find job titles that occur more than or equal to 10 times
+#valid_job_titles <- names(job_title_counts[job_title_counts >= 10])
+
+# Filter the dataframe to only include these job titles
+#filtered_salaries <- subset(cleaned_salaries, job_title %in% valid_job_titles)
+
+# Display the filtered dataframe
+#subset(filtered_salaries$job_title == "Other")
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Step 1: Calculate the frequencies of each job title
+job_title_freq <- table(cleaned_salaries$job_title)
+
+# Step 2: Create the histogram of job title frequencies
+# Convert the frequency table into a data frame for plotting
+job_title_freq_df <- as.data.frame(job_title_freq)
+
+# Plotting the histogram
+library(ggplot2)
+
+ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +  # Bar plot for categorical data
+  labs(
+    title = "Job Title Frequencies",  # Plot title
+    x = "Job Title",  # X-axis label
+    y = "Frequency"   # Y-axis label
+  ) +
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability
+```
+Since this representation does not seem right we need to group the job_title categories that are less than 20 into other category and then convert the frequencies into logarthmic scale for better representation.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+freq_table <- table(cleaned_salaries$job_title)
+
+freq_df <- as.data.frame(freq_table, stringsAsFactors = FALSE)
+
+colnames(freq_df) <- c("job_title", "frequency")
+
+
+threshold <- 20
+
+freq_df$job_title[freq_df$frequency <= threshold] <- "Other"
+
+
+freq_df <- aggregate(frequency ~ job_title, data = freq_df, sum)
+
+
+freq_df <- freq_df[order(-freq_df$frequency), ]
+
+
+cleaned_salaries$job_title <- ifelse(
+  cleaned_salaries$job_title %in% valid_job_titles,
+  cleaned_salaries$job_title, 
+  "Other"                     
+)
+
+
+cleaned_salaries
+```
+Rather than keeping job titles that appeared less than 20 times as separate titles, we aggregated them into "other" keyword.
+
+```{r}
+freq_df
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+  geom_bar(stat = "identity", fill = "skyblue") +  # Bar plot
+  labs(
+    title = "Job Title Frequencies",  # Plot title
+    x = "Job Title",  # X-axis label
+    y = "Frequency"   # Y-axis label
+  ) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels
+```
+The above graph shows that job titles are right skewed.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+freq_df
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+cleaned_salaries
+unique(cleaned_salaries$employment_type)
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+threshold <- 20
+# Compute frequencies and group low-frequency jobs into "Other"
+binned_data <- cleaned_salaries %>%
+  count(job_title, name = "frequency") %>%  # Calculate frequencies
+  mutate(
+    job_title = ifelse(frequency < threshold, "Other", job_title)
+  ) %>%
+  group_by(job_title) %>%
+  summarise(frequency = sum(frequency)) %>%
+  arrange(desc(frequency))
+
+ggplot(binned_data, aes(x = reorder(job_title, -frequency), y = frequency)) +
+  geom_bar(stat = "identity") +
+  scale_y_log10() +  # Log scale for better visibility
+  labs(title = "Job Title Frequencies", x = "Job Title", y = "Frequency (log10)") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+str(cleaned_salaries)
+```
+
+# Hyportheis Testing
+## Shapiro-Wilk test
+```{r include=TRUE, echo=TRUE, results='markup'}
+set.seed(123)
+# Subset the data into Full-time and Part-time groups
+full_time_data <- cleaned_salaries[cleaned_salaries$employment_type == "Full-time", ]
+# using only 5000 because shapiro only accepts sample size between 3 to 5000
+full_time_sample <- full_time_data[sample(nrow(full_time_data), 5000), ]
+part_time_data <- cleaned_salaries[cleaned_salaries$employment_type == "Part-time", ]
+contract_data <- cleaned_salaries[cleaned_salaries$employment_type=="Contract", ]
+
+# Conduct the Shapiro-Wilk test for Full-time salaries
+shapiro_test_full_time <- shapiro.test(full_time_sample$salary_in_usd)
+print(shapiro_test_full_time)
+
+# Conduct the Shapiro-Wilk test for Part-time salaries
+shapiro_test_part_time <- shapiro.test(part_time_data$salary_in_usd)
+print(shapiro_test_part_time)
+
+shapiro.test(contract_data$salary_in_usd)
+```
+
+Null Hypothesis: The salary data for Full-time employees is normally distributed.
+Alternate Hypothesis: The salary data for Full-time employees is not normally distributed.
+Results: Since the p-value is less than 2.2e-16, which is far smaller than the significance level (α = 0.05), we reject the null hypothesis. This suggests that there is enough evidence to conclude that the salary data for Full-time employees is not normally distributed.
+
+Null Hypothesis: The salary data for Part-time employees is normally distributed.
+Alternate Hypothesis: Part-time salary data does not significantly deviate from normality, meaning it is more likely to be normally distributed.
+Results: Since the p-value is 0.4491, which is greater than the significance level (α = 0.05), we fail to reject the null hypothesis. This suggests that there is insufficient evidence to conclude that the salary data for Part-time employees is not normally distributed.
+
+Null Hypothesis: The salary data for Contract employees is normally distributed.
+Alternate Hypothesis: The salary data for Contract employees is not normally distributed.
+Results: Since the p-value is 0.1172, which is greater than the significance level (α = 0.05), we fail to reject the null hypothesis. This suggests that there is insufficient evidence to conclude that the salary data for Contract employees is not normally distributed.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+data_manager <- cleaned_salaries[cleaned_salaries$job_title == "Data Manager", ]
+shapiro.test(data_manager$salary_in_usd)
+
+research_analyst <- cleaned_salaries[cleaned_salaries$job_title == "Research Analyst", ]
+shapiro.test(research_analyst$salary_in_usd)
+
+data_engineer <- cleaned_salaries[cleaned_salaries$job_title == "Data Engineer", ]
+shapiro.test(data_engineer$salary_in_usd)
+
+data_scientist <- cleaned_salaries[cleaned_salaries$job_title == "Data Scientist", ]
+shapiro.test(data_scientist$salary_in_usd)
+
+data_analyst <- cleaned_salaries[cleaned_salaries$job_title == "Data Analyst", ]
+shapiro.test(data_analyst$salary_in_usd)
+
+analytics_engineer <- cleaned_salaries[cleaned_salaries$job_title == "Analytics Engineer", ]
+shapiro.test(analytics_engineer$salary_in_usd)
+```
+Null Hypothesis: The salary data for Data Manager is normally distributed.
+Alternate hypothesis: The salary data for Data Manager is not normally distributed.
+results: Since the p-value (0.1905) is greater than the significance level (α = 0.05), we fail to reject the null hypothesis. This suggests that there is not enough evidence to conclude that the salary data for Data Manager is not normally distributed. Therefore, we can assume that the data follows a normal distribution.
+
+Null Hypothesis: The salary data for research analyst is normally distributed.
+Alternate hypothesis: The salary data for research analyst is not normally distributed.
+results: Since the p-value (0.0003165) is much less than the significance level (α = 0.05), we reject the null hypothesis. This indicates that there is enough evidence to conclude that the salary data for Research Analysts is not normally distributed.
+
+Final Result: From the above results we can conclude that only "Data Manager" and "Analytics Engineer" have normal distribution
+
+#T-test
+```{r include=TRUE, echo=TRUE, results='markup'}
+t_test_result <- t.test(data_manager$salary_in_usd, analytics_engineer$salary_in_usd)
+
+# Print the t-test result
+print(t_test_result)
+```
+Null Hypothesis: The average salaries of Data Managers and Analytics Engineers are equal.
+Alternative Hypothesis: The average salaries of Data Managers and Analytics Engineers are not equal.
+Results: Given that the p-value is 1.513e-08 (which is much smaller than 0.05), we reject the null hypothesis. This means that there is a statistically significant difference in the average salaries of Data Managers and Analytics Engineers, with Analytics Engineers earning more on average than Data Managers.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+#Conduct shapiro test and t-test if applicable on work models column
+unique(cleaned_salaries$work_models)
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+remote <- cleaned_salaries[cleaned_salaries$work_models == "Remote", ]
+shapiro.test(remote$salary_in_usd)
+
+on_site_salaries <- cleaned_salaries[cleaned_salaries$work_models == "On-site", ]
+shapiro.test(on_site_salaries$salary_in_usd)
+
+hybrid <- cleaned_salaries[cleaned_salaries$work_models == "Hybrid", ]
+shapiro.test(hybrid$salary_in_usd)
+```
+Null Hypothesis: All of the work models are normally distributed
+Alternate Hypothesis: None of the work models are normally distributed
+Results: Since all of the p-values(7.492e-12, 2.2e-16, 0.03666) are less than 0.05 we reject the null hypothesis. None of the work models (Remote, On-site, or Hybrid) have salaries that follow a normal distribution based on the Shapiro-Wilk test results.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+on_site_salaries <- cleaned_salaries[cleaned_salaries$work_models == "Hybrid", ]
+on_site_salaries
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+ggplot(cleaned_salaries, aes(x = work_year, y = salary_in_usd)) +
+  geom_line()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
