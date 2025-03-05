@@ -11,6 +11,7 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 library(dplyr)
 library(ggplot2)
 salaries <- read.csv('data_science_salaries.csv')
+```
 
 sum(is.na(salaries))
 colSums(is.na(salaries))
@@ -71,26 +72,26 @@ find_outliers <- function(data, column_name) {
   return(outliers)
 }
 
-# Apply function to find outliers in salary and salary_in_usd columns
-outliers_salary_usd <- find_outliers(us_residents_df, "salary_in_usd")
+# Apply function to salary and salary_in_usd
+outliers_salary_usd <- find_outliers(salaries$salary_in_usd)
 
 # Display the outliers
-list(Salary_USD_Outliers = outliers_salary_usd)
+list(Salary_Outliers = outliers_salary, Salary_USD_Outliers = outliers_salary_usd)
 
 ```
+
+
 
 
 
 ###Visualizing Outliers with Boxplots
 ```{r include=TRUE, echo=TRUE, results='markup'}
 
+
 # Boxplot for Salary in USD
 ggplot(us_residents_df, aes(y = salary_in_usd)) +
   geom_boxplot(fill = "lightblue", outlier.color = "red") +
   labs(title = "Boxplot of Salary in USD", y = "Salary in USD")
-
-```
-
 ```{r include=TRUE, echo=TRUE, results='markup'}
 outliers_salary_usd
 ```
@@ -140,6 +141,150 @@ ggplot(cleaned_salaries, aes(y = salary_in_usd)) +
 
 # Display the filtered dataframe
 #subset(filtered_salaries$job_title == "Other")
+```
+
+###1. How do salaries vary across different experience levels in data science?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+# Compute average salary and salary in USD by experience level
+experience_salary <- salaries %>%
+  group_by(experience_level) %>%
+  summarise(
+    Avg_Salary = mean(salary, na.rm = TRUE),
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+# Display summary table
+print(experience_salary)
+
+# Visualize with Boxplot
+ggplot(salaries, aes(x = experience_level, y = salary_in_usd, fill = experience_level)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Salary Distribution by Experience Level", x = "Experience Level", y = "Salary in USD")
+
+```
+
+### 2. What is the average salary difference between remote and in-person data science jobs?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+# Check column names to verify correct variable name
+colnames(salaries)
+
+# Convert work_models to a factor (important for t-test)
+salaries$work_models <- as.factor(salaries$work_models)
+
+# Compute average salary by work model
+work_model_salary <- salaries %>%
+  group_by(work_models) %>%
+  summarise(
+    Avg_Salary = mean(salary, na.rm = TRUE),
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+# Display results
+print(work_model_salary)
+
+# Perform t-test to check if salary difference is significant
+if (length(unique(salaries$work_models)) == 2) {  # Ensure exactly two categories exist
+  t_test_result <- t.test(salary_in_usd ~ work_models, data = salaries, na.action = na.omit)
+  print(t_test_result)
+} else {
+  print("T-test cannot be performed: work_models column does not have exactly two groups.")
+}
+
+# Boxplot of Salary by Work Model
+ggplot(salaries, aes(x = work_models, y = salary_in_usd, fill = work_models)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Salary Comparison: Remote vs. In-Person", x = "Work Model", y = "Salary in USD")
+
+```
+
+### 3. How have salary trends in data science evolved from 2020 to 2024?
+```{r}
+
+# Compute average salary by year
+salary_trends <- salaries %>%
+  group_by(work_year) %>%
+  summarise(
+    Avg_Salary = mean(salary, na.rm = TRUE),
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+# Display results
+print(salary_trends)
+
+# Line plot for Salary Trends
+ggplot(salary_trends, aes(x = work_year, y = Avg_Salary_USD)) +
+  geom_line(color = "blue", size = 1) +
+  geom_point(color = "red", size = 2) +
+  theme_minimal() +
+  labs(title = "Salary Trends in Data Science (2020-2024)", x = "Year", y = "Average Salary in USD")
+
+```
+
+# 4. Difference in salaries with respect to company size
+```{r}
+library("scales")
+salary_summary <- salaries %>%
+  group_by(company_size) %>%
+  summarise(
+    mean_salary = mean(salary_in_usd, na.rm = TRUE),
+    median_salary = median(salary_in_usd, na.rm = TRUE),
+    count = n()
+  )
+
+print(salary_summary)
+
+
+#visualization
+ggplot(salaries, aes(x = company_size, y = salary_in_usd, fill = company_size)) +
+  geom_boxplot() +
+  labs(title = "Salary Distribution by Company Size", x = "Company Size", y = "Salary (USD)") +
+  scale_y_continuous(labels = comma)
+  theme_minimal()
+
+#ANOVA Test
+anova_result <- aov(salary_in_usd ~ company_size, data = salaries)
+summary(anova_result)
+
+```
+
+#5. Which job title earned the most in 2024?
+```{r}
+
+salaries_2024 <- salaries %>%
+  filter(work_year == 2024)
+
+# average salaries by job title
+top_job <- salaries_2024 %>%
+  group_by(job_title) %>%
+  summarise(
+    mean_salary = mean(salary_in_usd, na.rm = TRUE),
+    max_salary = max(salary_in_usd, na.rm = TRUE),
+    count = n()
+  ) %>%
+  arrange(desc(mean_salary))
+print(top_job)
+
+#top 10
+top_10_jobs <- top_job %>% head(10)
+
+ggplot(top_10_jobs, aes(x = reorder(job_title, mean_salary), y = mean_salary, fill = job_title)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  
+  labs(title = "Top 10 Highest Paying Job Titles in 2024", x = "Job Title", y = "Average Salary (USD)") +
+  scale_y_continuous(labels = comma)
+  theme_minimal()
+
+
+highest_paid_job <- salaries_2024 %>%
+  filter(salary_in_usd == max(salary_in_usd, na.rm = TRUE))
+print(highest_paid_job)
 ```
 
 
@@ -376,21 +521,3 @@ on_site_salaries
 ggplot(cleaned_salaries, aes(x = work_year, y = salary_in_usd)) +
   geom_line()
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
