@@ -6,7 +6,7 @@
 | **Task** | **Deadline** | **Status** |
 |----------|-------------|------------|
 | **Topic Proposal Submission** | **March 5** | ✅ Completed |
-| **EDA & Statistical Analysis** | **March 19** | 🔄 In Progress |
+| **EDA & Statistical Analysis** | **March 19** | ✅ Completed |
 | **Presentation Preparation** | **March 19** | 🔄 In Progress |
 | **Final Research Paper Submission** | **March 26** | ⏳ Pending |
 | **GitHub Repository Maintenance** | **Ongoing** | ✅ Active |
