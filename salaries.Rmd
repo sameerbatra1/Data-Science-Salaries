@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -152,24 +154,25 @@ ggplot(cleaned_salaries, aes(y = salary_in_usd)) +
 
 ###1. How do salaries vary across different experience levels in data science?
 ```{r include=TRUE, echo=TRUE, results='markup'}
+# Step 1: Calculate the frequencies of each job title
+job_title_freq <- table(cleaned_salaries$job_title)
 
-# Compute average salary and salary in USD by experience level
-experience_salary <- cleaned_salaries %>%
-  group_by(experience_level) %>%
-  summarise(
-    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
-    Count = n()
-  )
+# Step 2: Create the histogram of job title frequencies
+# Convert the frequency table into a data frame for plotting
+job_title_freq_df <- as.data.frame(job_title_freq)
 
-# Display summary table
-print(experience_salary)
+# Plotting the histogram
+library(ggplot2)
 
-# Visualize with Boxplot
-ggplot(cleaned_salaries, aes(x = experience_level, y = salary_in_usd, fill = experience_level)) +
-  geom_boxplot() +
-  theme_minimal() +
-  labs(title = "Salary Distribution by Experience Level", x = "Experience Level", y = "Salary in USD")
-
+ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +  # Bar plot for categorical data
+  labs(
+    title = "Job Title Frequencies",  # Plot title
+    x = "Job Title",  # X-axis label
+    y = "Frequency"   # Y-axis label
+  ) +
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability`
 ```
 
 ### 2. What is the average salary difference between remote and in-person data science jobs?
@@ -253,8 +256,12 @@ ggplot(cleaned_salaries, aes(x = company_size, y = salary_in_usd, fill = company
   theme_minimal()
 
 #ANOVA Test
-#anova_result <- aov(salary_in_usd ~ company_size, data = cleaned_salaries)
-#summary(anova_result)
+anova_result <- aov(salary_in_usd ~ company_size, data = cleaned_salaries)
+summary(anova_result)
+
+# Post-hoc analysis using Tukey's test
+tukey_result <- TukeyHSD(anova_result)
+print(tukey_result)
 
 ```
 
@@ -283,7 +290,7 @@ ggplot(top_10_jobs, aes(x = reorder(job_title, mean_salary), y = mean_salary, fi
   coord_flip() +  
   labs(title = "Top 10 Highest Paying Job Titles in 2024", x = "Job Title", y = "Average Salary (USD)") +
   scale_y_continuous(labels = comma)
-  theme_minimal()
+ ` theme_minimal()
 
 
 highest_paid_job <- salaries_2024 %>%
@@ -296,18 +303,16 @@ ggplot(cleaned_salaries, aes(x = work_year, y = salary_in_usd)) +
   geom_line()
 ```
 
-```{r include=TRUE, echo=TRUE, results='markup'}
 # Step 1: Calculate the frequencies of each job title
 job_title_freq <- table(cleaned_salaries$job_title)
 
-# Step 2: Create the histogram of job title frequencies
-# Convert the frequency table into a data frame for plotting
+# Step 2: Create the frequency table as a data frame for plotting
 job_title_freq_df <- as.data.frame(job_title_freq)
 
 # Plotting the histogram
 library(ggplot2)
 
-ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+ggplot(job_title_freq_df, aes(x = reorder(job_title, -Freq), y = Freq)) +
   geom_bar(stat = "identity", fill = "skyblue", color = "black") +  # Bar plot for categorical data
   labs(
     title = "Job Title Frequencies",  # Plot title
@@ -316,6 +321,7 @@ ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
   ) +
   theme_minimal() +  # Minimal theme
   theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability
+
 ```
 
 Since this representation does not seem right we need to group the job_title categories that are less than 20 into other category and then convert the frequencies into logarthmic scale for better representation.
