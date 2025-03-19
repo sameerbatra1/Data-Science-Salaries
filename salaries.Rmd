@@ -12,8 +12,11 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r include=TRUE, echo=TRUE, results='markup'}
 library(dplyr)
 library(ggplot2)
-salaries <- read.csv('data_science_salaries.csv')
 
+```
+
+```{r include=TRUE, results='markup', echo=TRUE}
+salaries = read.csv("data_science_salaries.csv")
 sum(is.na(salaries))
 colSums(is.na(salaries))
 rowSums(is.na(salaries))
@@ -78,24 +81,22 @@ find_outliers <- function(data, column_name) {
   return(outliers)
 }
 
-# Apply function to find outliers in salary and salary_in_usd columns
+# Apply function to salary and salary_in_usd
 outliers_salary_usd <- find_outliers(us_residents_df, "salary_in_usd")
-
+outliers_salary_usd
 # Display the outliers
-list(Salary_USD_Outliers = outliers_salary_usd)
+#list(Salary_Outliers = outliers_salary, Salary_USD_Outliers = outliers_salary_usd)
 
 ```
 
-
-
 ###Visualizing Outliers with Boxplots
 ```{r include=TRUE, echo=TRUE, results='markup'}
+
 
 # Boxplot for Salary in USD
 ggplot(us_residents_df, aes(y = salary_in_usd)) +
   geom_boxplot(fill = "lightblue", outlier.color = "red") +
   labs(title = "Boxplot of Salary in USD", y = "Salary in USD")
-
 ```
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
@@ -126,7 +127,8 @@ cleaned_salaries
 ```{r include=TRUE, echo=TRUE, results='markup'}
 cleaned_salaries
 ```
-After removing the outliers, there are 5215 values in the dataframe. This means that 90 values were outliers.
+After removing the outliers, there are 5204 values in the dataframe. This means that 101 values were outliers.
+
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
 ggplot(cleaned_salaries, aes(y = salary_in_usd)) +
@@ -150,6 +152,7 @@ ggplot(cleaned_salaries, aes(y = salary_in_usd)) +
 ```
 
 
+###1. How do salaries vary across different experience levels in data science?
 ```{r include=TRUE, echo=TRUE, results='markup'}
 # Step 1: Calculate the frequencies of each job title
 job_title_freq <- table(cleaned_salaries$job_title)
@@ -169,8 +172,158 @@ ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
     y = "Frequency"   # Y-axis label
   ) +
   theme_minimal() +  # Minimal theme
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability`
 ```
+
+### 2. What is the average salary difference between remote and in-person data science jobs?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+# Check column names to verify correct variable name
+colnames(cleaned_salaries)
+
+# Convert work_models to a factor (important for t-test)
+cleaned_salaries$work_models <- as.factor(cleaned_salaries$work_models)
+
+# Compute average salary by work model
+work_model_salary <- cleaned_salaries %>%
+  group_by(work_models) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+# Display results
+print(work_model_salary)
+
+# Perform t-test to check if salary difference is significant
+if (length(unique(cleaned_salaries$work_models)) == 2) {  # Ensure exactly two categories exist
+  t_test_result <- t.test(salary_in_usd ~ work_models, data = cleaned_salaries, na.action = na.omit)
+  print(t_test_result)
+} else {
+  print("T-test cannot be performed: work_models column does not have exactly two groups.")
+}
+
+# Boxplot of Salary by Work Model
+ggplot(cleaned_salaries, aes(x = work_models, y = salary_in_usd, fill = work_models)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Salary Comparison: Remote vs. In-Person", x = "Work Model", y = "Salary in USD")
+
+```
+
+### 3. How have salary trends in data science evolved from 2020 to 2024?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+# Compute average salary by year
+salary_trends <- cleaned_salaries %>%
+  group_by(work_year) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+# Display results
+print(salary_trends)
+
+# Line plot for Salary Trends
+ggplot(salary_trends, aes(x = work_year, y = Avg_Salary_USD)) +
+  geom_line(color = "blue", size = 1) +
+  geom_point(color = "red", size = 2) +
+  theme_minimal() +
+  labs(title = "Salary Trends in Data Science (2020-2024)", x = "Year", y = "Average Salary in USD")
+
+```
+
+# 4. Difference in salaries with respect to company size
+```{r include=TRUE, echo=TRUE, results='markup'}
+library("scales")
+salary_summary <- cleaned_salaries %>%
+  group_by(company_size) %>%
+  summarise(
+    mean_salary = mean(salary_in_usd, na.rm = TRUE),
+    median_salary = median(salary_in_usd, na.rm = TRUE),
+    count = n()
+  )
+
+print(salary_summary)
+
+
+#visualization
+ggplot(cleaned_salaries, aes(x = company_size, y = salary_in_usd, fill = company_size)) +
+  geom_boxplot() +
+  labs(title = "Salary Distribution by Company Size", x = "Company Size", y = "Salary (USD)") +
+  scale_y_continuous(labels = comma)
+  theme_minimal()
+
+#ANOVA Test
+anova_result <- aov(salary_in_usd ~ company_size, data = cleaned_salaries)
+summary(anova_result)
+
+# Post-hoc analysis using Tukey's test
+tukey_result <- TukeyHSD(anova_result)
+print(tukey_result)
+
+```
+
+#5. Which job title earned the most in 2024?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+salaries_2024 <- cleaned_salaries %>%
+  filter(work_year == 2024)
+
+# average salaries by job title
+top_job <- salaries_2024 %>%
+  group_by(job_title) %>%
+  summarise(
+    mean_salary = mean(salary_in_usd, na.rm = TRUE),
+    max_salary = max(salary_in_usd, na.rm = TRUE),
+    count = n()
+  ) %>%
+  arrange(desc(mean_salary))
+print(top_job)
+
+#top 10
+top_10_jobs <- top_job %>% head(10)
+
+ggplot(top_10_jobs, aes(x = reorder(job_title, mean_salary), y = mean_salary, fill = job_title)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  
+  labs(title = "Top 10 Highest Paying Job Titles in 2024", x = "Job Title", y = "Average Salary (USD)") +
+  scale_y_continuous(labels = comma)
+ ` theme_minimal()
+
+
+highest_paid_job <- salaries_2024 %>%
+  filter(salary_in_usd == max(salary_in_usd, na.rm = TRUE))
+print(highest_paid_job)
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+ggplot(cleaned_salaries, aes(x = work_year, y = salary_in_usd)) +
+  geom_line()
+```
+
+# Step 1: Calculate the frequencies of each job title
+job_title_freq <- table(cleaned_salaries$job_title)
+
+# Step 2: Create the frequency table as a data frame for plotting
+job_title_freq_df <- as.data.frame(job_title_freq)
+
+# Plotting the histogram
+library(ggplot2)
+
+ggplot(job_title_freq_df, aes(x = reorder(job_title, -Freq), y = Freq)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +  # Bar plot for categorical data
+  labs(
+    title = "Job Title Frequencies",  # Plot title
+    x = "Job Title",  # X-axis label
+    y = "Frequency"   # Y-axis label
+  ) +
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability
+
+```
+
 Since this representation does not seem right we need to group the job_title categories that are less than 20 into other category and then convert the frequencies into logarthmic scale for better representation.
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
@@ -202,9 +355,11 @@ cleaned_salaries$job_title <- ifelse(
 
 cleaned_salaries
 ```
+
 Rather than keeping job titles that appeared less than 20 times as separate titles, we aggregated them into "other" keyword.
 
-```{r}
+
+```{r include=TRUE, echo=TRUE, results='markup'}
 freq_df
 ```
 
@@ -218,6 +373,7 @@ ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
   ) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels
 ```
+
 The above graph shows that job titles are right skewed.
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
@@ -349,10 +505,53 @@ Alternate Hypothesis: None of the work models are normally distributed
 Results: Since all of the p-values(7.492e-12, 2.2e-16, 0.03666) are less than 0.05 we reject the null hypothesis. None of the work models (Remote, On-site, or Hybrid) have salaries that follow a normal distribution based on the Shapiro-Wilk test results.
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
-on_site_salaries <- cleaned_salaries[cleaned_salaries$work_models == "Hybrid", ]
-on_site_salaries
+cleaned_salaries
 ```
 
+# Chi-Squared Test
+### conducting chi-squared test between employment_type and work_models 
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$employment_type, cleaned_salaries$work_models)
+chisq_test <- chisq.test(table_data)
+print(chisq_test)
+chisq_test$expected
+```
+Null Hypothesis: There is no association between employment type and work model (they are independent).
+Alternate Hypothesis: There is an association between employment type and work model (they are dependent).
+Results: Since the p-value(6.673e-05) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between employment type and work model. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Contract, Contract:Remote, Part-time: Hybrid, Part-time: On-site, and Part-time: Remote are all less than 5, which may affect the reliability of the test.*
+
+### conducting chi-squared test between company_size and work_models 
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$company_size, cleaned_salaries$work_models)
+chisq_test <- chisq.test(table_data)
+print(chisq_test)
+chisq_test$expected
+```
+Null Hypothesis: There is no association between company_size and work model (they are independent).
+Alternate Hypothesis: There is an association between company_size and work model (they are dependent).
+Results: Since the p-value(<2.2e-16) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between company_size and work model. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Large, small:hybrid are all less than 5, which may affect the reliability of the test.*
+
+### conducting chi-squared test between work_models and experience level
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$work_models, cleaned_salaries$experience_level)
+chisq_test <- chisq.test(table_data)
+print(chisq_test)
+chisq_test$expected
+```
+Null Hypothesis: There is no association between work model and experience level (they are independent).
+Alternate Hypothesis: There is an association between work model and experience level (they are dependent).
+Results: Since the p-value(<2.2e-16) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between work model and experience level. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Entry-level, and Hybrid:Executive-level are all less than 5, which may affect the reliability of the test.*
+
+### conducting chi-squared test between experience level and employement type
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$experience_level, cleaned_salaries$employment_type)
+chisq_test <- chisq.test(table_data)
+print(chisq_test)
+chisq_test$expected
+```
+Null Hypothesis: There is no association between experience level and employment type(they are independent).
+Alternate Hypothesis: There is an association between experience level and employment type(they are dependent).
+Results: Since the p-value(3.076e-09) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between experience level and employment type. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Entry-level:contract, Executive-level:contract, Entry-level:Part-time, Executive-level and part-time, mid-level:contract, mid-level:part-time and senior-level:part-time are all less than 5, which may affect the reliability of the test.*
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
 
@@ -362,42 +561,3 @@ on_site_salaries
 ```{r include=TRUE, echo=TRUE, results='markup'}
 
 ```
-
-
-```{r include=TRUE, echo=TRUE, results='markup'}
-
-```
-
-
-```{r include=TRUE, echo=TRUE, results='markup'}
-
-```
-
-
-```{r include=TRUE, echo=TRUE, results='markup'}
-
-```
-
-
-```{r include=TRUE, echo=TRUE, results='markup'}
-ggplot(cleaned_salaries, aes(x = work_year, y = salary_in_usd)) +
-  geom_line()
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
