@@ -1,38 +1,81 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "Salary Trends in Data Science "
+author: "TEAM 3 - Jeongmin An, Yeobi Hobson, Sameer Batra, Aditi Shukla"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: readable
+    highlight: tango
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+# **Data Science Salary Trends (2020-2024)**  
+#### *Exploring how salaries have evolved and the key factors influencing earnings*
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+---
 
+## **Table of Contents**
+- [Introduction](#introduction)
+- [Loading Dataset](#.loading Dataset)
+- [Data Cleaning](#.data cleaning)
+- [Exploratory Data Analysis](#exploratory-data-analysis)
+- [Statistical Analysis & Hypothesis Testing](#statistical-analysis-hypothesis-testing)
+- [Conclusion](#conclusion)
+- [References](#references)
+
+---
+
+## **1. Introduction**
+Data science is a rapidly evolving field, and salaries vary widely based on experience, job role, work model, and company size.  
+This analysis aims to uncover **salary trends from 2020 to 2024**, examining how different factors influence earnings.  
+
+Our key research questions:  
+- How have salaries changed over time?
+- What is the relationship between experience and salary?
+- Do work models (remote vs. in-person) impact earnings?
+- How does company size influence salary distribution?
+
+---
+
+
+
+## **2. Loading Dataset**
+**Source:** Kaggle Dataset (6,599 observations)  
+**Years Covered:** 2020-2024  
 ```{r include=TRUE, echo=TRUE, results='markup'}
+#load packages
 library(dplyr)
 library(ggplot2)
 
+#load data
+salaries = read.csv("data_science_salaries.csv")
 ```
 
-```{r include=TRUE, results='markup', echo=TRUE}
-salaries = read.csv("data_science_salaries.csv")
-sum(is.na(salaries))
-colSums(is.na(salaries))
-rowSums(is.na(salaries))
-salaries[!complete.cases(salaries), ] 
+
+
+## **3. Data cleaning**
+### Check for missing values
+```{r include=TRUE, echo=TRUE, results='markup'}
+#check for missing values
+total_na <- sum(is.na(salaries))
+missing_summary <- colSums(is.na(salaries))
+cat("Total missing values:", total_na, "\n")
+print(missing_summary)
 
 # Display first few rows
 head(salaries)
 ```
+Since no missing values are found, we proceed without handling missing data.
 
-```{r include=True, echo=TRUE, results='markup'}
+### Check data structure and summary
+```{r include=TRUE, echo=TRUE, results='markup'}
 str(salaries)
-```
-
-```{r include=True, echo=False, results='markup'}
 summary(salaries)
 ```
 
-```{r include=TRUE, echo=TRUE, results='markup'}
+### Check employee residence distribution
+```{r include=TRUE, echo=TRUE, results='hide'}
 # Create the grouped dataframe
 country_counts <- as.data.frame(table(salaries$employee_residence))
 colnames(country_counts) <- c("Country", "Frequency")
@@ -42,7 +85,9 @@ country_counts <- country_counts[order(country_counts$Frequency, decreasing = TR
 
 # View the result
 country_counts
+```
 
+```{r include=TRUE, echo=TRUE, results='markup'}
 # Create the barplot
 ggplot(country_counts, aes(x = reorder(Country, -Frequency), y = Frequency)) +
   geom_bar(stat = "identity", fill = "steelblue") +
@@ -52,17 +97,19 @@ ggplot(country_counts, aes(x = reorder(Country, -Frequency), y = Frequency)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+### Filter for US-Based Employees & Remove unnecessary columns
 ```{r include=TRUE, echo=TRUE, results='markup'}
+# Filter data(US)
 us_residents_df <- subset(salaries, employee_residence == "United States")
 
-#Since we are only working with us_residents dataframe we need to delete salary, salary_currency
+##Since we are only working with us_residents dataframe we need to delete salary, salary_currency
 us_residents_df <- subset(us_residents_df, select= -c(employee_residence, salary, salary_currency))
 
-us_residents_df
+head(us_residents_df)
 ```
 
-###Detecting Outliers Using IQR (Boxplot Method)
-```{r include=TRUE, echo=TRUE, results='markup'}
+### Detecting Outliers Using IQR (Boxplot Method)
+```{r include=TRUE, echo=TRUE, results='hide'}
 # Function to find outliers using IQR and return entire rows
 find_outliers <- function(data, column_name) {
   column <- data[[column_name]]
@@ -82,26 +129,18 @@ find_outliers <- function(data, column_name) {
 # Apply function to salary and salary_in_usd
 outliers_salary_usd <- find_outliers(us_residents_df, "salary_in_usd")
 outliers_salary_usd
-# Display the outliers
-#list(Salary_Outliers = outliers_salary, Salary_USD_Outliers = outliers_salary_usd)
 
 ```
 
-###Visualizing Outliers with Boxplots
 ```{r include=TRUE, echo=TRUE, results='markup'}
-
-
 # Boxplot for Salary in USD
 ggplot(us_residents_df, aes(y = salary_in_usd)) +
   geom_boxplot(fill = "lightblue", outlier.color = "red") +
   labs(title = "Boxplot of Salary in USD", y = "Salary in USD")
 ```
 
-```{r include=TRUE, echo=TRUE, results='markup'}
-outliers_salary_usd
-```
-
-```{r include=TRUE, echo=FALSE, results='markup'}
+### Remove outliers
+```{r include=TRUE, echo=TRUE, results='hide'}
 # Get the indices of the rows with outliers in salary and salary_in_usd
 outlier_rows_salary_usd <- which(us_residents_df$salary_in_usd %in% outliers_salary_usd$salary_in_usd)
 
@@ -109,49 +148,76 @@ outlier_rows_salary_usd <- which(us_residents_df$salary_in_usd %in% outliers_sal
 cleaned_salaries <- us_residents_df[-outlier_rows_salary_usd, ]
 cleaned_salaries
 ```
-
-```{r include=TRUE, echo=TRUE, results='markup'}
-## Get the indices of the rows with outliers in salary and salary_in_usd
-#outlier_rows_salary <- which(salaries$salary %in% outliers_salary$salary)
-#outlier_rows_salary_usd <- which(salaries$salary_in_usd %in% outliers_salary_usd$salary_in_usd)
-
-# Combine the indices of both outliers
-#outlier_rows <- unique(c(outlier_rows_salary, outlier_rows_salary_usd))
-
-# Remove outliers from the original dataset using subset
-#cleaned_salaries <- salaries[-outlier_rows, ]
-```
-
-```{r include=TRUE, echo=TRUE, results='markup'}
-cleaned_salaries
-```
 After removing the outliers, there are 5204 values in the dataframe. This means that 101 values were outliers.
-
-
 ```{r include=TRUE, echo=TRUE, results='markup'}
 ggplot(cleaned_salaries, aes(y = salary_in_usd)) +
   geom_boxplot(fill = "lightblue", outlier.color = "red") +
   labs(title = "Boxplot of Salary in usd", y = "Salary")
 ```
 
-
+### Detecting Outliers Using the ezids package
 ```{r include=TRUE, echo=TRUE, results='markup'}
-# Count occurrences of each job_title
-#job_title_counts <- table(cleaned_salaries$job_title)
-#job_title_counts
-# Find job titles that occur more than or equal to 10 times
-#valid_job_titles <- names(job_title_counts[job_title_counts >= 10])
 
-# Filter the dataframe to only include these job titles
-#filtered_salaries <- subset(cleaned_salaries, job_title %in% valid_job_titles)
+library(ezids)
 
-# Display the filtered dataframe
-#subset(filtered_salaries$job_title == "Other")
+# Outlier Removal + Visualization
+us_residents_clean <- ezids::outlierKD2(us_residents_df, salary_in_usd, rm = TRUE, boxplt = TRUE, qqplt = TRUE)
+
+# Check normality after removing outliers 
+qqnorm(us_residents_clean$salary_in_usd, main = "QQ-Plot for Salary After Outlier Removal", col = "blue")
+qqline(us_residents_clean$salary_in_usd, col = "red")
+
 ```
 
 
-###1. How do salaries vary across different experience levels in data science?
+
+
+## **4. Exploratory Data Analysis**
+### 1) How have salary trends in data science evolved from 2020 to 2024?
 ```{r include=TRUE, echo=TRUE, results='markup'}
+
+#Check work_year value
+unique(cleaned_salaries$work_year)
+
+# Compute average salary by year
+salary_trends <- cleaned_salaries %>%
+  group_by(work_year) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+print(salary_trends)
+
+# Line plot for Salary Trends
+ggplot(salary_trends, aes(x = work_year, y = Avg_Salary_USD)) +
+  geom_line(color = "blue", linewidth = 1) +
+  geom_point(color = "red", size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Salary Trends in Data Science (2020-2024)", x = "Year", y = "Average Salary in USD") +
+  theme_minimal()
+
+# Box plot
+ggplot(cleaned_salaries, aes(x = as.factor(work_year), y = salary_in_usd, fill = as.factor(work_year))) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Salary Distribution by Year",x = "Year",y = "Salary in USD") +
+  theme_minimal()
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ as.factor(work_year), data = cleaned_salaries)
+summary(anova_result)
+
+
+```
+The ANOVA test reveals a highly significant effect of work year on salary (F = 6.716, p = 2.18e-05), indicating that salaries in data science have significantly changed over time.
+
+
+### 2) How do salaries vary across different experience levels in data science?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+#Check experience_level value
+unique(cleaned_salaries$experience_level)
 
 # Compute average salary and salary in USD by experience level
 experience_salary <- cleaned_salaries %>%
@@ -164,76 +230,67 @@ experience_salary <- cleaned_salaries %>%
 # Display summary table
 print(experience_salary)
 
+library(scales)
+
+cleaned_salaries$experience_level <- factor(
+  cleaned_salaries$experience_level,
+  levels = c("Entry-level", "Mid-level", "Senior-level", "Executive-level")
+)
+
 # Visualize with Boxplot
 ggplot(cleaned_salaries, aes(x = experience_level, y = salary_in_usd, fill = experience_level)) +
   geom_boxplot() +
-  theme_minimal() +
-  labs(title = "Salary Distribution by Experience Level", x = "Experience Level", y = "Salary in USD")
+  labs(title = "Salary Distribution by Experience Level", x = "Experience Level", y = "Salary in USD") +
+  scale_y_continuous(labels = scales::comma)+
+  theme_minimal()
 
+library(dplyr)
+filtered_data <- cleaned_salaries %>% 
+  filter(experience_level == "Entry-level" & salary_in_usd  )
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ experience_level, data = cleaned_salaries)
+summary(anova_result)
 ```
+The ANOVA test shows a highly significant effect of experience level on salary (F = 249.2, p < 2e-16), indicating substantial salary differences across experience levels.
 
-### 2. What is the average salary difference between remote and in-person data science jobs?
+
+### 3) What is the average salary difference between work models data science jobs?
 ```{r include=TRUE, echo=TRUE, results='markup'}
 
-# Check column names to verify correct variable name
-colnames(cleaned_salaries)
-
-# Convert work_models to a factor (important for t-test)
-cleaned_salaries$work_models <- as.factor(cleaned_salaries$work_models)
+#Check work_models value
+unique(cleaned_salaries$work_models)
 
 # Compute average salary by work model
 work_model_salary <- cleaned_salaries %>%
   group_by(work_models) %>%
   summarise(
     Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
-    Count = n()
+    Count = n() 
   )
-
-# Display results
 print(work_model_salary)
-
-# Perform t-test to check if salary difference is significant
-if (length(unique(cleaned_salaries$work_models)) == 2) {  # Ensure exactly two categories exist
-  t_test_result <- t.test(salary_in_usd ~ work_models, data = cleaned_salaries, na.action = na.omit)
-  print(t_test_result)
-} else {
-  print("T-test cannot be performed: work_models column does not have exactly two groups.")
-}
 
 # Boxplot of Salary by Work Model
 ggplot(cleaned_salaries, aes(x = work_models, y = salary_in_usd, fill = work_models)) +
   geom_boxplot() +
-  theme_minimal() +
-  labs(title = "Salary Comparison: Remote vs. In-Person", x = "Work Model", y = "Salary in USD")
+  scale_y_continuous(labels = scales::comma) + 
+  labs(title = "Salary Comparison: Remote vs. In-Person", x = "Work Model", y = "Salary in USD")+
+  theme_minimal()
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ work_models, data = cleaned_salaries)
+summary(anova_result)
 
 ```
+The ANOVA test identifies a statistically significant difference in salaries across work models (F = 4.969, p = 0.00698), suggesting that at least one work model has a significantly different average salary."
 
-### 3. How have salary trends in data science evolved from 2020 to 2024?
+
+### 4) Difference in salaries with respect to company size
 ```{r include=TRUE, echo=TRUE, results='markup'}
 
-# Compute average salary by year
-salary_trends <- cleaned_salaries %>%
-  group_by(work_year) %>%
-  summarise(
-    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
-    Count = n()
-  )
+#Check company_size value
+unique(cleaned_salaries$company_size)
 
-# Display results
-print(salary_trends)
-
-# Line plot for Salary Trends
-ggplot(salary_trends, aes(x = work_year, y = Avg_Salary_USD)) +
-  geom_line(color = "blue", size = 1) +
-  geom_point(color = "red", size = 2) +
-  theme_minimal() +
-  labs(title = "Salary Trends in Data Science (2020-2024)", x = "Year", y = "Average Salary in USD")
-
-```
-
-# 4. Difference in salaries with respect to company size
-```{r include=TRUE, echo=TRUE, results='markup'}
-library("scales")
 salary_summary <- cleaned_salaries %>%
   group_by(company_size) %>%
   summarise(
@@ -245,20 +302,22 @@ salary_summary <- cleaned_salaries %>%
 print(salary_summary)
 
 
-#visualization
+#Box plot for Salary distribution by company size
 ggplot(cleaned_salaries, aes(x = company_size, y = salary_in_usd, fill = company_size)) +
   geom_boxplot() +
   labs(title = "Salary Distribution by Company Size", x = "Company Size", y = "Salary (USD)") +
-  scale_y_continuous(labels = comma)
+  scale_y_continuous(labels = comma)+
   theme_minimal()
 
-#ANOVA Test
-#anova_result <- aov(salary_in_usd ~ company_size, data = cleaned_salaries)
-#summary(anova_result)
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ company_size, data = cleaned_salaries)
+summary(anova_result)
 
 ```
+The ANOVA test reveals a statistically significant effect of company size on salary (F = 8.18, p = 0.000284), indicating that salaries vary significantly across different company sizes. 
 
-#5. Which job title earned the most in 2024?
+
+### 5) Which job title earned the most in 2024?
 ```{r include=TRUE, echo=TRUE, results='markup'}
 
 salaries_2024 <- cleaned_salaries %>%
@@ -276,26 +335,23 @@ top_job <- salaries_2024 %>%
 print(top_job)
 
 #top 10
-top_10_jobs <- top_job %>% head(10)
+top_10_jobs <- top_job %>% slice_head(n = 10)
 
 ggplot(top_10_jobs, aes(x = reorder(job_title, mean_salary), y = mean_salary, fill = job_title)) +
   geom_bar(stat = "identity") +
   coord_flip() +  
   labs(title = "Top 10 Highest Paying Job Titles in 2024", x = "Job Title", y = "Average Salary (USD)") +
-  scale_y_continuous(labels = comma)
+  scale_y_continuous(labels = scales::comma) +
   theme_minimal()
 
-
 highest_paid_job <- salaries_2024 %>%
-  filter(salary_in_usd == max(salary_in_usd, na.rm = TRUE))
+  slice_max(salary_in_usd, n = 1)  
 print(highest_paid_job)
 ```
 
-```{r include=TRUE, echo=TRUE, results='markup'}
-ggplot(cleaned_salaries, aes(x = work_year, y = salary_in_usd)) +
-  geom_line()
-```
 
+### 5-1)  What are the most common job title (Which job title hire the most)?
+#### Filter data by job title
 ```{r include=TRUE, echo=TRUE, results='markup'}
 # Step 1: Calculate the frequencies of each job title
 job_title_freq <- table(cleaned_salaries$job_title)
@@ -303,11 +359,12 @@ job_title_freq <- table(cleaned_salaries$job_title)
 # Step 2: Create the histogram of job title frequencies
 # Convert the frequency table into a data frame for plotting
 job_title_freq_df <- as.data.frame(job_title_freq)
+colnames(job_title_freq_df) <- c("job_title", "frequency") 
 
 # Plotting the histogram
 library(ggplot2)
 
-ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+ggplot(job_title_freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
   geom_bar(stat = "identity", fill = "skyblue", color = "black") +  # Bar plot for categorical data
   labs(
     title = "Job Title Frequencies",  # Plot title
@@ -317,10 +374,10 @@ ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
   theme_minimal() +  # Minimal theme
   theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability
 ```
-
 Since this representation does not seem right we need to group the job_title categories that are less than 20 into other category and then convert the frequencies into logarthmic scale for better representation.
 
-```{r include=TRUE, echo=TRUE, results='markup'}
+
+```{r include=TRUE, echo=TRUE, results='hide'}
 
 freq_table <- table(cleaned_salaries$job_title)
 
@@ -328,20 +385,16 @@ freq_df <- as.data.frame(freq_table, stringsAsFactors = FALSE)
 
 colnames(freq_df) <- c("job_title", "frequency")
 
-
 threshold <- 20
 
 freq_df$job_title[freq_df$frequency <= threshold] <- "Other"
 
-
 freq_df <- aggregate(frequency ~ job_title, data = freq_df, sum)
-
 
 freq_df <- freq_df[order(-freq_df$frequency), ]
 
-
 cleaned_salaries$job_title <- ifelse(
-  cleaned_salaries$job_title %in% valid_job_titles,
+  cleaned_salaries$job_title %in% freq_df$job_title,
   cleaned_salaries$job_title, 
   "Other"                     
 )
@@ -349,11 +402,9 @@ cleaned_salaries$job_title <- ifelse(
 
 cleaned_salaries
 ```
-
 Rather than keeping job titles that appeared less than 20 times as separate titles, we aggregated them into "other" keyword.
 
-
-```{r include=TRUE, echo=TRUE, results='markup'}
+```{r include=TRUE, echo=TRUE, results='hide'}
 freq_df
 ```
 
@@ -365,47 +416,28 @@ ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
     x = "Job Title",  # X-axis label
     y = "Frequency"   # Y-axis label
   ) +
+  theme_minimal()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels
 ```
-
 The above graph shows that job titles are right skewed.
 
-```{r include=TRUE, echo=TRUE, results='markup'}
+```{r include=TRUE, echo=TRUE, results='hide'}
 freq_df
 ```
 
-```{r include=TRUE, echo=TRUE, results='markup'}
+```{r include=TRUE, echo=TRUE, results='hide'}
 cleaned_salaries
 unique(cleaned_salaries$employment_type)
 ```
-
-
-```{r include=TRUE, echo=TRUE, results='markup'}
-threshold <- 20
-# Compute frequencies and group low-frequency jobs into "Other"
-binned_data <- cleaned_salaries %>%
-  count(job_title, name = "frequency") %>%  # Calculate frequencies
-  mutate(
-    job_title = ifelse(frequency < threshold, "Other", job_title)
-  ) %>%
-  group_by(job_title) %>%
-  summarise(frequency = sum(frequency)) %>%
-  arrange(desc(frequency))
-
-ggplot(binned_data, aes(x = reorder(job_title, -frequency), y = frequency)) +
-  geom_bar(stat = "identity") +
-  scale_y_log10() +  # Log scale for better visibility
-  labs(title = "Job Title Frequencies", x = "Job Title", y = "Frequency (log10)") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-```
-
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
 str(cleaned_salaries)
 ```
 
-# Hyportheis Testing
-## Shapiro-Wilk test
+
+
+## **5. Statistical Analysis & Hypothesis Testing**
+### Shapiro-Wilk test
 ```{r include=TRUE, echo=TRUE, results='markup'}
 set.seed(123)
 # Subset the data into Full-time and Part-time groups
@@ -467,7 +499,7 @@ results: Since the p-value (0.0003165) is much less than the significance level 
 
 Final Result: From the above results we can conclude that only "Data Manager" and "Analytics Engineer" have normal distribution
 
-#T-test
+### T-test
 ```{r include=TRUE, echo=TRUE, results='markup'}
 t_test_result <- t.test(data_manager$salary_in_usd, analytics_engineer$salary_in_usd)
 
@@ -498,15 +530,15 @@ Null Hypothesis: All of the work models are normally distributed
 Alternate Hypothesis: None of the work models are normally distributed
 Results: Since all of the p-values(7.492e-12, 2.2e-16, 0.03666) are less than 0.05 we reject the null hypothesis. None of the work models (Remote, On-site, or Hybrid) have salaries that follow a normal distribution based on the Shapiro-Wilk test results.
 
-```{r include=TRUE, echo=TRUE, results='markup'}
+```{r include=TRUE, echo=TRUE, results='hide'}
 cleaned_salaries
 ```
 
-# Chi-Squared Test
-### conducting chi-squared test between employment_type and work_models 
+### Chi-Squared Test
+#### conducting chi-squared test between employment_type and work_models 
 ```{r include=TRUE, echo=TRUE, results='markup'}
 table_data <- table(cleaned_salaries$employment_type, cleaned_salaries$work_models)
-chisq_test <- chisq.test(table_data)
+chisq_test <- chisq.test(table_data, simulate.p.value = TRUE)
 print(chisq_test)
 chisq_test$expected
 ```
@@ -514,10 +546,10 @@ Null Hypothesis: There is no association between employment type and work model 
 Alternate Hypothesis: There is an association between employment type and work model (they are dependent).
 Results: Since the p-value(6.673e-05) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between employment type and work model. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Contract, Contract:Remote, Part-time: Hybrid, Part-time: On-site, and Part-time: Remote are all less than 5, which may affect the reliability of the test.*
 
-### conducting chi-squared test between company_size and work_models 
+#### conducting chi-squared test between company_size and work_models 
 ```{r include=TRUE, echo=TRUE, results='markup'}
 table_data <- table(cleaned_salaries$company_size, cleaned_salaries$work_models)
-chisq_test <- chisq.test(table_data)
+chisq_test <- chisq.test(table_data, simulate.p.value = TRUE)
 print(chisq_test)
 chisq_test$expected
 ```
@@ -525,10 +557,10 @@ Null Hypothesis: There is no association between company_size and work model (th
 Alternate Hypothesis: There is an association between company_size and work model (they are dependent).
 Results: Since the p-value(<2.2e-16) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between company_size and work model. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Large, small:hybrid are all less than 5, which may affect the reliability of the test.*
 
-### conducting chi-squared test between work_models and experience level
+#### conducting chi-squared test between experience level and work_models
 ```{r include=TRUE, echo=TRUE, results='markup'}
 table_data <- table(cleaned_salaries$work_models, cleaned_salaries$experience_level)
-chisq_test <- chisq.test(table_data)
+chisq_test <- chisq.test(table_data, simulate.p.value = TRUE)
 print(chisq_test)
 chisq_test$expected
 ```
@@ -536,10 +568,10 @@ Null Hypothesis: There is no association between work model and experience level
 Alternate Hypothesis: There is an association between work model and experience level (they are dependent).
 Results: Since the p-value(<2.2e-16) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between work model and experience level. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Entry-level, and Hybrid:Executive-level are all less than 5, which may affect the reliability of the test.*
 
-### conducting chi-squared test between experience level and employement type
+#### conducting chi-squared test between experience level and employement type
 ```{r include=TRUE, echo=TRUE, results='markup'}
 table_data <- table(cleaned_salaries$experience_level, cleaned_salaries$employment_type)
-chisq_test <- chisq.test(table_data)
+chisq_test <- chisq.test(table_data, simulate.p.value = TRUE)
 print(chisq_test)
 chisq_test$expected
 ```
@@ -547,11 +579,21 @@ Null Hypothesis: There is no association between experience level and employment
 Alternate Hypothesis: There is an association between experience level and employment type(they are dependent).
 Results: Since the p-value(3.076e-09) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between experience level and employment type. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Entry-level:contract, Executive-level:contract, Entry-level:Part-time, Executive-level and part-time, mid-level:contract, mid-level:part-time and senior-level:part-time are all less than 5, which may affect the reliability of the test.*
 
-```{r include=TRUE, echo=TRUE, results='markup'}
-
-```
 
 
-```{r include=TRUE, echo=TRUE, results='markup'}
 
-```
+## **6. Conclusion**
+📌 **Key Takeaways:**  
+**Salaries have increased from 2020 to 2024**, likely due to growing demand.  
+**Experience level significantly impacts salary**, with senior professionals earning much more.  
+**Remote jobs offer higher salaries** than on-site roles.  
+**Larger companies tend to pay better** than small organizations.  
+**Statistical tests confirm significant relationships** between salary, experience, work model, and company size.
+
+
+
+## **References**
+1. Kaggle: Data Science Salaries Dataset  
+2. Tidyverse Package Documentation  
+3. R Graphics Cookbook
+
