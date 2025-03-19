@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -20,12 +22,14 @@ salaries[!complete.cases(salaries), ]
 # Display first few rows
 head(salaries)
 ```
-```{r include=True, echo=TRUE, results='markup'}
+```{r include=TRUE, echo=TRUE, results='markup'}
 str(salaries)
 ```
-```{r include=True, echo=False, results='markup'}
+
+```{r include=TRUE, echo=TRUE, results='markup'}
 summary(salaries)
 ```
+
 ```{r include=TRUE, echo=TRUE, results='markup'}
 # Create the grouped dataframe
 country_counts <- as.data.frame(table(salaries$employee_residence))
@@ -44,7 +48,9 @@ ggplot(country_counts, aes(x = reorder(Country, -Frequency), y = Frequency)) +
        x = "Country",
        y = "Frequency") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
+
 ```{r include=TRUE, echo=TRUE, results='markup'}
 us_residents_df <- subset(salaries, employee_residence == "United States")
 
@@ -53,6 +59,7 @@ us_residents_df <- subset(us_residents_df, select= -c(employee_residence, salary
 
 us_residents_df
 ```
+
 ###Detecting Outliers Using IQR (Boxplot Method)
 ```{r include=TRUE, echo=TRUE, results='markup'}
 # Function to find outliers using IQR and return entire rows
