@@ -7,7 +7,7 @@
 |----------|-------------|------------|
 | **Topic Proposal Submission** | **March 5** | ✅ Completed |
 | **EDA & Statistical Analysis** | **March 19** | ✅ Completed |
-| **Presentation Preparation** | **March 19** | 🔄 In Progress |
+| **Presentation Preparation** | **March 19** | ✅ Completed |
 | **Final Research Paper Submission** | **March 26** | ⏳ Pending |
 | **GitHub Repository Maintenance** | **Ongoing** | ✅ Active |
 
@@ -22,9 +22,8 @@
 
 
 
-##this is google slide for Presentation Specialist
-###https://docs.google.com/presentation/d/1pacPVto4HirA-xvTX8rja7oJNskwn6SxyIGb7SHFtUA/edit?usp=sharing
-
+##this is Canca slide for Presentation 
+###(https://www.canva.com/design/DAGhtx4Gtdw/0JQPRMqfC4VT2w2OVK3ZWQ/edit?utm_content=DAGhtx4Gtdw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
 ##this is googole doc for final research paper
 ###https://docs.google.com/document/d/1muooCcFn-6SBPMr2qs-wUV4A38U7KIOdbBBpLQJEHb0/edit?usp=sharing
