@@ -22,7 +22,7 @@
 
 
 
-##this is Canca slide for Presentation 
+##this is Canva slide for Presentation 
 ###(https://www.canva.com/design/DAGhtx4Gtdw/0JQPRMqfC4VT2w2OVK3ZWQ/edit?utm_content=DAGhtx4Gtdw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
 ##this is googole doc for final research paper
