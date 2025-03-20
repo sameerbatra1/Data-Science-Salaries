@@ -20,11 +20,12 @@ salaries = read.csv("data_science_salaries.csv")
 sum(is.na(salaries))
 colSums(is.na(salaries))
 rowSums(is.na(salaries))
-salaries[!complete.cases(salaries), ] 
+salaries[!complete.cases(salaries),] 
 
 # Display first few rows
 head(salaries)
 ```
+
 ```{r include=TRUE, echo=TRUE, results='markup'}
 str(salaries)
 ```
@@ -259,6 +260,8 @@ ggplot(cleaned_salaries, aes(x = company_size, y = salary_in_usd, fill = company
 anova_result <- aov(salary_in_usd ~ company_size, data = cleaned_salaries)
 summary(anova_result)
 
+
+
 # Post-hoc analysis using Tukey's test
 tukey_result <- TukeyHSD(anova_result)
 print(tukey_result)
@@ -303,6 +306,7 @@ ggplot(cleaned_salaries, aes(x = work_year, y = salary_in_usd)) +
   geom_line()
 ```
 
+```{r include=TRUE, echo=FALSE, results='markup'}
 # Step 1: Calculate the frequencies of each job title
 job_title_freq <- table(cleaned_salaries$job_title)
 
@@ -321,19 +325,16 @@ ggplot(job_title_freq_df, aes(x = reorder(job_title, -Freq), y = Freq)) +
   ) +
   theme_minimal() +  # Minimal theme
   theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability
-
 ```
 
 Since this representation does not seem right we need to group the job_title categories that are less than 20 into other category and then convert the frequencies into logarthmic scale for better representation.
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
-
 freq_table <- table(cleaned_salaries$job_title)
 
 freq_df <- as.data.frame(freq_table, stringsAsFactors = FALSE)
 
 colnames(freq_df) <- c("job_title", "frequency")
-
 
 threshold <- 20
 
@@ -351,8 +352,6 @@ cleaned_salaries$job_title <- ifelse(
   cleaned_salaries$job_title, 
   "Other"                     
 )
-
-
 cleaned_salaries
 ```
 
@@ -473,6 +472,14 @@ results: Since the p-value (0.0003165) is much less than the significance level 
 
 Final Result: From the above results we can conclude that only "Data Manager" and "Analytics Engineer" have normal distribution
 
+```{r include=TRUE, echo=TRUE, results='markup'}
+qqnorm(data_manager$salary_in_usd, main = "Q-Q Plot for Data Manager Salaries")
+qqline(data_manager$salary_in_usd, col = "red", lwd = 2)
+
+qqnorm(analytics_engineer$salary_in_usd, main = "Q-Q Plot for Analytics Engineer Salaries")
+qqline(analytics_engineer$salary_in_usd, col = "red", lwd = 2)
+```
+
 #T-test
 ```{r include=TRUE, echo=TRUE, results='markup'}
 t_test_result <- t.test(data_manager$salary_in_usd, analytics_engineer$salary_in_usd)
@@ -513,6 +520,8 @@ cleaned_salaries
 ```{r include=TRUE, echo=TRUE, results='markup'}
 table_data <- table(cleaned_salaries$employment_type, cleaned_salaries$work_models)
 chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Employment Type and Work Models")
 print(chisq_test)
 chisq_test$expected
 ```
@@ -524,6 +533,8 @@ Results: Since the p-value(6.673e-05) is less than 0.05, we reject the null hypo
 ```{r include=TRUE, echo=TRUE, results='markup'}
 table_data <- table(cleaned_salaries$company_size, cleaned_salaries$work_models)
 chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Company Size and Work Models")
 print(chisq_test)
 chisq_test$expected
 ```
@@ -535,6 +546,8 @@ Results: Since the p-value(<2.2e-16) is less than 0.05, we reject the null hypot
 ```{r include=TRUE, echo=TRUE, results='markup'}
 table_data <- table(cleaned_salaries$work_models, cleaned_salaries$experience_level)
 chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Experience Level and Work Models")
 print(chisq_test)
 chisq_test$expected
 ```
@@ -546,6 +559,8 @@ Results: Since the p-value(<2.2e-16) is less than 0.05, we reject the null hypot
 ```{r include=TRUE, echo=TRUE, results='markup'}
 table_data <- table(cleaned_salaries$experience_level, cleaned_salaries$employment_type)
 chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Experience Level and Employment Type")
 print(chisq_test)
 chisq_test$expected
 ```
@@ -554,7 +569,13 @@ Alternate Hypothesis: There is an association between experience level and emplo
 Results: Since the p-value(3.076e-09) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between experience level and employment type. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Entry-level:contract, Executive-level:contract, Entry-level:Part-time, Executive-level and part-time, mid-level:contract, mid-level:part-time and senior-level:part-time are all less than 5, which may affect the reliability of the test.*
 
 ```{r include=TRUE, echo=TRUE, results='markup'}
+library(dplyr)
+# Filter the data
+filtered_data <- us_residents_df %>%
+  filter(experience_level == "Entry-level" & salary_in_usd == 200000)
 
+# View the filtered data
+print(filtered_data)
 ```
 
 
