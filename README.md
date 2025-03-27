@@ -1,5 +1,5 @@
 # Data-Science-Salaries
-#March 3, 2025 updates
+#March 25, 2025 updates
 
 ## 📌 Timeline Overview
 
@@ -8,7 +8,7 @@
 | **Topic Proposal Submission** | **March 5** | ✅ Completed |
 | **EDA & Statistical Analysis** | **March 19** | ✅ Completed |
 | **Presentation Preparation** | **March 19** | ✅ Completed |
-| **Final Research Paper Submission** | **March 26** | ⏳ Pending |
+| **Final Research Paper Submission** | **March 26** | ✅ Completed |
 | **GitHub Repository Maintenance** | **Ongoing** | ✅ Active |
 
 ✅ **GitHub will be used to track progress**  
@@ -25,9 +25,6 @@
 ##this is Canva slide for Presentation 
 ###(https://www.canva.com/design/DAGhtx4Gtdw/0JQPRMqfC4VT2w2OVK3ZWQ/edit?utm_content=DAGhtx4Gtdw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
-##this is googole doc for final research paper
-###https://docs.google.com/document/d/1muooCcFn-6SBPMr2qs-wUV4A38U7KIOdbBBpLQJEHb0/edit?usp=sharing
---
 
 
 ###This is submitted topic proposal
