@@ -1,5 +1,5 @@
 # Data-Science-Salaries
-#March 25, 2025 updates
+#Apr 2, 2025 updates
 
 ## 📌 Timeline Overview
 
@@ -9,6 +9,10 @@
 | **EDA & Statistical Analysis** | **March 19** | ✅ Completed |
 | **Presentation Preparation** | **March 19** | ✅ Completed |
 | **Final Research Paper Submission** | **March 26** | ✅ Completed |
+
+| **Final group meeting* | **Apr8-11th** | in progress |
+
+| **GitHub Repository Maintenance** | **Ongoing** | ✅ Active |
 | **GitHub Repository Maintenance** | **Ongoing** | ✅ Active |
 
 ✅ **GitHub will be used to track progress**  
