@@ -1,70 +1,76 @@
-# Data-Science-Salaries
-#Apr 2, 2025 updates
+# 📊 Data Science Salaries: 2020–2024 Trend Analysis  
+**TEAM 3 – DATS 6101 Final Project**  
+_Last updated: April 2, 2025_
 
-## 📌 Timeline Overview
+## 🧠 Project Overview
 
-| **Task** | **Deadline** | **Status** |
-|----------|-------------|------------|
-| **Topic Proposal Submission** | **March 5** | ✅ Completed |
-| **EDA & Statistical Analysis** | **March 19** | ✅ Completed |
-| **Presentation Preparation** | **March 19** | ✅ Completed |
-| **Final Research Paper Submission** | **March 26** | ✅ Completed |
+This project investigates how **data science salaries** have evolved from **2020 to 2024**, using a Kaggle dataset with 6,599 observations. We aim to identify patterns in salary growth and assess the impact of **job role**, **experience level**, and **remote work** on compensation trends.
 
-| **Final group meeting* | **Apr8-11th** | in progress |
+🔍 **SMART Research Question**:  
+> _How has the salary of Data Scientists changed from 2020 to 2024, and can we identify a trend in salary growth?_
 
-| **GitHub Repository Maintenance** | **Ongoing** | ✅ Active |
-| **GitHub Repository Maintenance** | **Ongoing** | ✅ Active |
+---
 
-✅ **GitHub will be used to track progress**  
-✅ **All updates should be committed regularly**
+## 📌 Timeline & Status
 
+| **Milestone**                       | **Deadline**     | **Status**     |
+|------------------------------------|------------------|----------------|
+| Topic Proposal Submission          | March 5          | ✅ Completed    |
+| EDA & Statistical Analysis         | March 19         | ✅ Completed    |
+| Presentation Preparation           | March 19         | ✅ Completed    |
+| Final Research Paper Submission    | March 26         | ✅ Completed    |
+| Final Group Meeting                | April 8–11       | 🔄 In Progress |
+| GitHub Repository Maintenance      | Ongoing          | ✅ Active       |
 
+> ✅ GitHub is actively used to track updates and progress.
 
-##this is googole doc for Topic Proposal: Analyzing Salary Trends in Data Science (iT iS completed!!!! 👍 )
-###https://docs.google.com/document/d/1TonihM2pEICN_JhDjw1G4cQPScTqqWj9scFf5tIRjkU/edit?usp=sharing
+---
 
+## 📂 Project Links
 
+- 📝 **Topic Proposal Google Doc**  
+  [View Proposal](https://docs.google.com/document/d/1TonihM2pEICN_JhDjw1G4cQPScTqqWj9scFf5tIRjkU/edit?usp=sharing)
 
+- 📽️ **Team Presentation (Canva)**  
+  [View Slides](https://www.canva.com/design/DAGhtx4Gtdw/0JQPRMqfC4VT2w2OVK3ZWQ/edit?utm_content=DAGhtx4Gtdw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
-##this is Canva slide for Presentation 
-###(https://www.canva.com/design/DAGhtx4Gtdw/0JQPRMqfC4VT2w2OVK3ZWQ/edit?utm_content=DAGhtx4Gtdw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+- 📊 **GitHub Repository**  
+  [Main Repo](https://github.com/sameerbatra1/Data-Science-Salaries)
 
+---
 
+## 📌 Dataset Details
 
-###This is submitted topic proposal
-### 📌 Submitted Topic Proposal
+| **Feature**            | **Value**                 |
+|------------------------|---------------------------|
+| Dataset Name           | Data Science Salaries 2024 |
+| Source                 | Kaggle                    |
+| Rows                   | 6,599                     |
+| Years Covered          | 2020–2024                 |
+| Focus Variables        | Salary, Job Title, Experience Level, Work Setting (Remote/On-site), Company Size |
 
-## **Topic Proposal: Analyzing Salary Trends in Data Science**  
-**TEAM 3**  
+---
 
-### **a) Research Topic**  
-Data science is a fast-growing field, and salaries can vary widely based on **experience, job role, and whether someone works remotely or in an office**. As demand for data professionals grows, understanding how these factors influence earnings becomes increasingly important.  
+## ✅ Completed Milestones
 
-This project will analyze **salary trends from 2020 to 2024**, exploring how salaries have changed over time and whether there are identifiable trends in salary growth. This analysis will provide insights into **earning potential for data science professionals** and inform **hiring trends in the industry**.  
+- ✔️ Topic Proposal
+- ✔️ EDA & Summary Statistics
+- ✔️ Correlation & Trend Analysis
+- ✔️ Visualizations
+- ✔️ Final Paper
+- ✔️ Presentation
 
----  
+---
 
-### **b) SMART Question**  
-**How has the salary of Data Scientists changed from 2020 to 2024, and can we identify a trend in salary growth?**  
+## 🧪 Next Steps
 
-- **Specific:** Examines salary trends for Data Scientists over a defined period.  
-- **Measurable:** Can be analyzed by calculating yearly salary trends.  
-- **Achievable:** The dataset contains salary data for Data Scientists from **2020 to 2024**.  
-- **Relevant:** Provides insights into salary growth patterns in the data science field.  
-- **Time-bound:** Focused on salaries from **2020 to 2024**.  
+- Final group discussion to consolidate conclusions and feedback  
+- Final README polish and GitHub updates before project submission  
 
----  
+---
 
-### **c) Dataset Information**  
-- **Dataset Name:** Data Science Salaries 2024  
-- **Source:** Kaggle Dataset  
-- **Number of Observations:** 6,599 rows  
-- **Years Covered:** 2020–2024  
+## 🙌 Acknowledgments
 
----  
+Special thanks to our DATS 6101 instructor and peers for valuable feedback and collaboration throughout the semester.
 
-### **d) GitHub Repository**  
-🔗 [GitHub Link](https://github.com/sameerbatra1/Data-Science-Salaries)  
-
-
-
+---
