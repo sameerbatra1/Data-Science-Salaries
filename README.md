@@ -1,4 +1,4 @@
-# 📊 Predicting Data Science Salaries in 2025  
+# Predicting Data Science Salaries in 2025  
 **TEAM 3 – DATS 6101 Final Project**  
 _Last updated: April 8, 2025_
 
@@ -62,22 +62,3 @@ Using a dataset of 6,599 observations from Kaggle, we explore relationships betw
 - ✔️ Visualizations of Trends
 - ✔️ Midterm Report & Presentation
 
----
-
-## 🔜 Final Project Tasks
-
-- 🔄 Apply modeling techniques (Linear, Polynomial, Random Forest)
-- 🔄 Predict 2025 salaries and evaluate model accuracy
-- 🔄 Present individual model results and final comparison
-- 🔄 Knit final `.Rmd` to HTML for class presentation and final report
-- 🔄 Submit code, paper, and presentation materials on Blackboard
-
----
-
-## 🙌 Acknowledgments  
-Special thanks to our **DATS 6101 instructor** and peers for providing support and feedback throughout this semester.  
-
-**TEAM 3**  
-Jeongmin An • Yeobi Hobson • Sameer Batra • Aditi Shukla
-
----
