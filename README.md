@@ -30,21 +30,6 @@ Using a dataset of 6,599 observations from Kaggle, we explore relationships betw
 
 ---
 
-## 👥 Team Roles + Coding & Slide Deadlines
-
-| **Team Member** | **Task**                                       | **Code Deadline** | **Slide Deadline** |
-|------------------|------------------------------------------------|-------------------|---------------------|
-| **Person A**     | Data Cleaning + Feature Prep (`model_data.csv`) | April 10 (Thu)    | April 13 (Sun)      |
-| **Person B**     | Linear Regression + 2025 Prediction             | April 12 (Sat)    | April 13 (Sun)      |
-| **Person C**     | Polynomial + Random Forest + Visualizations     | April 12 (Sat)    | April 13 (Sun)      |
-| **Person D**     | Model Evaluation + Final Knit + HTML Formatting | April 14 (Mon)    | April 14 (Mon)      |
-
-➡️ Each person is responsible for:
-- Completing their assigned code chunk in `final_project.Rmd` by the deadline  
-- Creating 1–2 slides summarizing their work  
-- Committing all files and updates to GitHub via their personal branch
-
----
 
 ## 📂 Project Links
 
