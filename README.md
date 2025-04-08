@@ -33,9 +33,11 @@ Using a dataset of 6,599 observations from Kaggle, we explore relationships betw
 
 ## 📂 Project Links
 
-- 📝 [Final Topic Proposal (Google Doc)](link-here)
+
+- 📝 [Final Topic Proposal (Google Doc)](https://docs.google.com/document/d/1TonihM2pEICN_JhDjw1G4cQPScTqqWj9scFf5tIRjkU/edit?tab=t.0#heading=h.9bmkoplnagtk)
 - 📽️ [Team Presentation Slides (Google Slides/Canva)](link-here)
 - 💻 [GitHub Repository – Team 3](https://github.com/sameerbatra1/Data-Science-Salaries)
+
 
 ---
 
