@@ -3,16 +3,18 @@
 _Last updated: April 8, 2025_
 
 ---
+<h2>📝 Meeting Notes (April 8, 2025)</h2>
 
-## Project Overview  
-This final project builds on our midterm exploration of data science salary trends. We now extend the analysis by applying regression and machine learning models to **predict the average salary of Data Scientists in 2025** based on data from 2020 to 2024.  
+<h3>📅 Project Timeline/DEADLINE</h3>
+<ul>
+  <li><strong>April 10, 11PM</strong> ➜ Data preparation for modeling (<em>Yeobi</em>)</li>
+  <li><strong>April 12, 11PM</strong> ➜ Create machine learning models (<em>Jeongmin & Aditi</em>)</li>
+  <li><strong>April 12, 11PM</strong> ➜ (maybe) Create MLP Regression model (<em>Yeobi</em>)</li>
+  <li><strong>April 14, 11PM</strong> ➜ Finalize and polish all modeling code (<em>Sameer</em>)</li>
+  <li><strong>April 16, 11PM</strong> ➜ Complete presentation slides and visuals (<em>Sameer & Aditi</em>)</li>
+  <li><strong>April 18, 11PM</strong> ➜ Submit final paper (10-page HTML summary) (<em>Yeobi & Jeongmin</em>)</li>
+</ul>
 
-Using a dataset of 6,599 observations from Kaggle, we explore relationships between job roles, experience levels, remote work arrangements, and compensation, and compare different modeling techniques to determine the most accurate predictor.
-
----
-
-## 🔍 SMART Research Question  
-**What is the predicted average salary of Data Scientists in 2025 based on trends from 2020 to 2024?**
 
 ---
 
@@ -20,11 +22,11 @@ Using a dataset of 6,599 observations from Kaggle, we explore relationships betw
 
 | **Milestone**                           | **Deadline**           | **Status**         |
 |-----------------------------------------|-------------------------|---------------------|
-| Topic Proposal Submission               | April 16 (Wed) EOD      | ⏳ Upcoming         |
+| Topic Proposal Submission               | April 16 (Wed) EOD      |  ✅Completed        |
 | Code + HTML Submission (RMD)            | April 23 (Wed) EOD      | ⏳ Upcoming         |
 | Team Presentation in Class              | April 23 (Wed) Class    | ⏳ Upcoming         |
 | Final Paper (10-page HTML Summary)      | April 30 (Wed) EOD      | ⏳ Upcoming         |
-| GitHub Repo Activity (Ongoing)          | April 9–30              | ✅ Active           |
+| GitHub Repo Activity (Ongoing)          | April 9–30              |    Active           |
 
 ✅ GitHub is used to track commits, branches, and individual team member contributions (graded).
 
