@@ -613,31 +613,6 @@ Results: Since the p-value(3.076e-09) is less than 0.05, we reject the null hypo
 3. R Graphics Cookbook
 
 
-Excellent point! If you're **cleaning the data in the same `.Rmd` file** and continuing straight into modeling, then **saving as `final_project_data.RData` is optional** — not required.
-
-### ✅ You have **two good options**:
-
----
-
-### **Option 1: KEEP the save step (Recommended for teamwork)**
-- Save `train_df` and `test_df` using `save(...)`
-- This allows your team members to easily load the exact same data in their separate modeling scripts like this:
-```r
-load("final_project_data.RData")
-```
-
-🔁 **Best if your teammates are working in separate `.Rmd` or `.R` files.**
-
----
-
-### **Option 2: REMOVE the save step**
-- If you're doing **everything in the same file** and don’t need to share across scripts, just remove this part:
-```r
-save(train_df, test_df, file = "final_project_data.RData")
-```
-
-Your models can just use `train_df` and `test_df` directly.
-
 ---
 
 

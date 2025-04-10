@@ -11,7 +11,7 @@
 
 <meta name="author" content="TEAM 3 - Jeongmin An, Yeobi Hobson, Sameer Batra, Aditi Shukla" />
 
-<meta name="date" content="2025-04-09" />
+<meta name="date" content="2025-04-10" />
 
 <title>Salary Trends in Data Science</title>
 
@@ -1565,7 +1565,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Salary Trends in Data Science</h1>
 <h4 class="author">TEAM 3 - Jeongmin An, Yeobi Hobson, Sameer Batra,
 Aditi Shukla</h4>
-<h4 class="date">2025-04-09</h4>
+<h4 class="date">2025-04-10</h4>
 
 </div>
 
@@ -12867,39 +12867,7 @@ between salary, experience, work model, and company size.</p>
 </li>
 <li>R Graphics Cookbook</li>
 </ol>
-<p>Excellent point! If you’re <strong>cleaning the data in the same
-<code>.Rmd</code> file</strong> and continuing straight into modeling,
-then <strong>saving as <code>final_project_data.RData</code> is
-optional</strong> — not required.</p>
-<div id="you-have-two-good-options" class="section level3">
-<h3>✅ You have <strong>two good options</strong>:</h3>
 <hr />
-</div>
-<div id="option-1-keep-the-save-step-recommended-for-teamwork" class="section level3">
-<h3><strong>Option 1: KEEP the save step (Recommended for
-teamwork)</strong></h3>
-<ul>
-<li>Save <code>train_df</code> and <code>test_df</code> using
-<code>save(...)</code></li>
-<li>This allows your team members to easily load the exact same data in
-their separate modeling scripts like this:</li>
-</ul>
-<div class="sourceCode" id="cb137"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&quot;final_project_data.RData&quot;</span>)</span></code></pre></div>
-<p>🔁 <strong>Best if your teammates are working in separate
-<code>.Rmd</code> or <code>.R</code> files.</strong></p>
-<hr />
-</div>
-<div id="option-2-remove-the-save-step" class="section level3">
-<h3><strong>Option 2: REMOVE the save step</strong></h3>
-<ul>
-<li>If you’re doing <strong>everything in the same file</strong> and
-don’t need to share across scripts, just remove this part:</li>
-</ul>
-<div class="sourceCode" id="cb138"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" tabindex="-1"></a><span class="fu">save</span>(train_df, test_df, <span class="at">file =</span> <span class="st">&quot;final_project_data.RData&quot;</span>)</span></code></pre></div>
-<p>Your models can just use <code>train_df</code> and
-<code>test_df</code> directly.</p>
-<hr />
-</div>
 </div>
 <div id="continuing-final-project-data-preparation-for-modeling-yeobis-part" class="section level2">
 <h2>7. Continuing Final Project – Data Preparation for Modeling (Yeobi’s
@@ -12913,37 +12881,37 @@ evaluation.</h1>
 <div id="step-1-re-create-cleaned_salaries-by-removing-outliers-using-iqr" class="section level1">
 <h1>Step 1: Re-create cleaned_salaries by removing outliers using
 IQR</h1>
-<div class="sourceCode" id="cb139"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" tabindex="-1"></a>Q1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(us_residents_df<span class="sc">$</span>salary_in_usd, <span class="fl">0.25</span>)</span>
-<span id="cb139-2"><a href="#cb139-2" tabindex="-1"></a>Q3 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(us_residents_df<span class="sc">$</span>salary_in_usd, <span class="fl">0.75</span>)</span>
-<span id="cb139-3"><a href="#cb139-3" tabindex="-1"></a>IQR <span class="ot">&lt;-</span> Q3 <span class="sc">-</span> Q1</span>
-<span id="cb139-4"><a href="#cb139-4" tabindex="-1"></a>lower_bound <span class="ot">&lt;-</span> Q1 <span class="sc">-</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR</span>
-<span id="cb139-5"><a href="#cb139-5" tabindex="-1"></a>upper_bound <span class="ot">&lt;-</span> Q3 <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR</span>
-<span id="cb139-6"><a href="#cb139-6" tabindex="-1"></a></span>
-<span id="cb139-7"><a href="#cb139-7" tabindex="-1"></a>cleaned_salaries <span class="ot">&lt;-</span> us_residents_df[us_residents_df<span class="sc">$</span>salary_in_usd <span class="sc">&gt;=</span> lower_bound <span class="sc">&amp;</span></span>
-<span id="cb139-8"><a href="#cb139-8" tabindex="-1"></a>                                    us_residents_df<span class="sc">$</span>salary_in_usd <span class="sc">&lt;=</span> upper_bound, ]</span></code></pre></div>
+<div class="sourceCode" id="cb137"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" tabindex="-1"></a>Q1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(us_residents_df<span class="sc">$</span>salary_in_usd, <span class="fl">0.25</span>)</span>
+<span id="cb137-2"><a href="#cb137-2" tabindex="-1"></a>Q3 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(us_residents_df<span class="sc">$</span>salary_in_usd, <span class="fl">0.75</span>)</span>
+<span id="cb137-3"><a href="#cb137-3" tabindex="-1"></a>IQR <span class="ot">&lt;-</span> Q3 <span class="sc">-</span> Q1</span>
+<span id="cb137-4"><a href="#cb137-4" tabindex="-1"></a>lower_bound <span class="ot">&lt;-</span> Q1 <span class="sc">-</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR</span>
+<span id="cb137-5"><a href="#cb137-5" tabindex="-1"></a>upper_bound <span class="ot">&lt;-</span> Q3 <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR</span>
+<span id="cb137-6"><a href="#cb137-6" tabindex="-1"></a></span>
+<span id="cb137-7"><a href="#cb137-7" tabindex="-1"></a>cleaned_salaries <span class="ot">&lt;-</span> us_residents_df[us_residents_df<span class="sc">$</span>salary_in_usd <span class="sc">&gt;=</span> lower_bound <span class="sc">&amp;</span></span>
+<span id="cb137-8"><a href="#cb137-8" tabindex="-1"></a>                                    us_residents_df<span class="sc">$</span>salary_in_usd <span class="sc">&lt;=</span> upper_bound, ]</span></code></pre></div>
 </div>
 <div id="step-2-convert-categorical-columns-to-factors" class="section level1">
 <h1>Step 2: Convert categorical columns to factors</h1>
-<div class="sourceCode" id="cb140"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb140-1"><a href="#cb140-1" tabindex="-1"></a>cat_vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;job_title&quot;</span>, <span class="st">&quot;employment_type&quot;</span>, <span class="st">&quot;work_models&quot;</span>, <span class="st">&quot;company_size&quot;</span>, <span class="st">&quot;experience_level&quot;</span>)</span>
-<span id="cb140-2"><a href="#cb140-2" tabindex="-1"></a>cleaned_salaries[cat_vars] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(cleaned_salaries[cat_vars], as.factor)</span></code></pre></div>
+<div class="sourceCode" id="cb138"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" tabindex="-1"></a>cat_vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;job_title&quot;</span>, <span class="st">&quot;employment_type&quot;</span>, <span class="st">&quot;work_models&quot;</span>, <span class="st">&quot;company_size&quot;</span>, <span class="st">&quot;experience_level&quot;</span>)</span>
+<span id="cb138-2"><a href="#cb138-2" tabindex="-1"></a>cleaned_salaries[cat_vars] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(cleaned_salaries[cat_vars], as.factor)</span></code></pre></div>
 </div>
 <div id="step-3-split-the-data-into-8020-train-test-sets" class="section level1">
 <h1>Step 3: Split the data into 80/20 train-test sets</h1>
-<div class="sourceCode" id="cb141"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb141-1"><a href="#cb141-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb141-2"><a href="#cb141-2" tabindex="-1"></a>train_index <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(cleaned_salaries)), <span class="at">size =</span> <span class="fl">0.8</span> <span class="sc">*</span> <span class="fu">nrow</span>(cleaned_salaries))</span>
-<span id="cb141-3"><a href="#cb141-3" tabindex="-1"></a>train_df <span class="ot">&lt;-</span> cleaned_salaries[train_index, ]</span>
-<span id="cb141-4"><a href="#cb141-4" tabindex="-1"></a>test_df <span class="ot">&lt;-</span> cleaned_salaries[<span class="sc">-</span>train_index, ]</span></code></pre></div>
+<div class="sourceCode" id="cb139"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb139-2"><a href="#cb139-2" tabindex="-1"></a>train_index <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(cleaned_salaries)), <span class="at">size =</span> <span class="fl">0.8</span> <span class="sc">*</span> <span class="fu">nrow</span>(cleaned_salaries))</span>
+<span id="cb139-3"><a href="#cb139-3" tabindex="-1"></a>train_df <span class="ot">&lt;-</span> cleaned_salaries[train_index, ]</span>
+<span id="cb139-4"><a href="#cb139-4" tabindex="-1"></a>test_df <span class="ot">&lt;-</span> cleaned_salaries[<span class="sc">-</span>train_index, ]</span></code></pre></div>
 </div>
 <div id="step-4-ensure-consistency-in-factor-levels-between-training-and-test-sets" class="section level1">
 <h1>Step 4: Ensure consistency in factor levels between training and
 test sets</h1>
-<div class="sourceCode" id="cb142"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb142-1"><a href="#cb142-1" tabindex="-1"></a><span class="cf">for</span> (col <span class="cf">in</span> cat_vars) {</span>
-<span id="cb142-2"><a href="#cb142-2" tabindex="-1"></a>  test_df[[col]] <span class="ot">&lt;-</span> <span class="fu">factor</span>(test_df[[col]], <span class="at">levels =</span> <span class="fu">levels</span>(train_df[[col]]))</span>
-<span id="cb142-3"><a href="#cb142-3" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb140"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb140-1"><a href="#cb140-1" tabindex="-1"></a><span class="cf">for</span> (col <span class="cf">in</span> cat_vars) {</span>
+<span id="cb140-2"><a href="#cb140-2" tabindex="-1"></a>  test_df[[col]] <span class="ot">&lt;-</span> <span class="fu">factor</span>(test_df[[col]], <span class="at">levels =</span> <span class="fu">levels</span>(train_df[[col]]))</span>
+<span id="cb140-3"><a href="#cb140-3" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="step-5-view-structure-of-resulting-datasets" class="section level1">
 <h1>Step 5: View structure of resulting datasets</h1>
-<div class="sourceCode" id="cb143"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" tabindex="-1"></a><span class="fu">str</span>(train_df)</span></code></pre></div>
+<div class="sourceCode" id="cb141"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb141-1"><a href="#cb141-1" tabindex="-1"></a><span class="fu">str</span>(train_df)</span></code></pre></div>
 <pre><code>## &#39;data.frame&#39;:    4163 obs. of  8 variables:
 ##  $ job_title       : Factor w/ 104 levels &quot;AI Architect&quot;,..: 36 36 59 79 53 59 79 92 9 36 ...
 ##  $ experience_level: Factor w/ 4 levels &quot;Entry-level&quot;,..: 3 4 4 4 4 3 4 2 4 4 ...
@@ -12953,7 +12921,7 @@ test sets</h1>
 ##  $ salary_in_usd   : int  95000 175000 194500 170000 122000 185000 205600 200000 246500 115000 ...
 ##  $ company_location: chr  &quot;United States&quot; &quot;United States&quot; &quot;United States&quot; &quot;United States&quot; ...
 ##  $ company_size    : Factor w/ 3 levels &quot;Large&quot;,&quot;Medium&quot;,..: 2 2 2 2 2 2 2 2 2 3 ...</code></pre>
-<div class="sourceCode" id="cb145"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb145-1"><a href="#cb145-1" tabindex="-1"></a><span class="fu">str</span>(test_df)</span></code></pre></div>
+<div class="sourceCode" id="cb143"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" tabindex="-1"></a><span class="fu">str</span>(test_df)</span></code></pre></div>
 <pre><code>## &#39;data.frame&#39;:    1041 obs. of  8 variables:
 ##  $ job_title       : Factor w/ 104 levels &quot;AI Architect&quot;,..: 59 14 99 36 59 59 79 57 9 36 ...
 ##  $ experience_level: Factor w/ 4 levels &quot;Entry-level&quot;,..: 4 3 1 3 3 3 4 4 3 3 ...
@@ -12973,27 +12941,27 @@ using the cleaned dataset.</h1>
 </div>
 <div id="step-1-load-required-package" class="section level1">
 <h1>Step 1: Load required package</h1>
-<div class="sourceCode" id="cb147"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb147-1"><a href="#cb147-1" tabindex="-1"></a><span class="fu">library</span>(nnet)</span></code></pre></div>
+<div class="sourceCode" id="cb145"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb145-1"><a href="#cb145-1" tabindex="-1"></a><span class="fu">library</span>(nnet)</span></code></pre></div>
 </div>
 <div id="step-2-normalize-the-target-variable-salary_in_usd" class="section level1">
 <h1>Step 2: Normalize the target variable (salary_in_usd)</h1>
-<div class="sourceCode" id="cb148"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb148-1"><a href="#cb148-1" tabindex="-1"></a>normalize <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb148-2"><a href="#cb148-2" tabindex="-1"></a>  <span class="fu">return</span>((x <span class="sc">-</span> <span class="fu">min</span>(x)) <span class="sc">/</span> (<span class="fu">max</span>(x) <span class="sc">-</span> <span class="fu">min</span>(x)))</span>
-<span id="cb148-3"><a href="#cb148-3" tabindex="-1"></a>}</span>
-<span id="cb148-4"><a href="#cb148-4" tabindex="-1"></a></span>
-<span id="cb148-5"><a href="#cb148-5" tabindex="-1"></a>train_df<span class="sc">$</span>salary_scaled <span class="ot">&lt;-</span> <span class="fu">normalize</span>(train_df<span class="sc">$</span>salary_in_usd)</span>
-<span id="cb148-6"><a href="#cb148-6" tabindex="-1"></a>test_df<span class="sc">$</span>salary_scaled <span class="ot">&lt;-</span> <span class="fu">normalize</span>(test_df<span class="sc">$</span>salary_in_usd)</span></code></pre></div>
+<div class="sourceCode" id="cb146"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb146-1"><a href="#cb146-1" tabindex="-1"></a>normalize <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb146-2"><a href="#cb146-2" tabindex="-1"></a>  <span class="fu">return</span>((x <span class="sc">-</span> <span class="fu">min</span>(x)) <span class="sc">/</span> (<span class="fu">max</span>(x) <span class="sc">-</span> <span class="fu">min</span>(x)))</span>
+<span id="cb146-3"><a href="#cb146-3" tabindex="-1"></a>}</span>
+<span id="cb146-4"><a href="#cb146-4" tabindex="-1"></a></span>
+<span id="cb146-5"><a href="#cb146-5" tabindex="-1"></a>train_df<span class="sc">$</span>salary_scaled <span class="ot">&lt;-</span> <span class="fu">normalize</span>(train_df<span class="sc">$</span>salary_in_usd)</span>
+<span id="cb146-6"><a href="#cb146-6" tabindex="-1"></a>test_df<span class="sc">$</span>salary_scaled <span class="ot">&lt;-</span> <span class="fu">normalize</span>(test_df<span class="sc">$</span>salary_in_usd)</span></code></pre></div>
 </div>
 <div id="step-3-train-mlp-regression-model" class="section level1">
 <h1>Step 3: Train MLP regression model</h1>
-<div class="sourceCode" id="cb149"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb149-1"><a href="#cb149-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># for reproducibility</span></span>
-<span id="cb149-2"><a href="#cb149-2" tabindex="-1"></a>mlp_model <span class="ot">&lt;-</span> <span class="fu">nnet</span>(</span>
-<span id="cb149-3"><a href="#cb149-3" tabindex="-1"></a>  salary_scaled <span class="sc">~</span> job_title <span class="sc">+</span> employment_type <span class="sc">+</span> work_models <span class="sc">+</span> company_size <span class="sc">+</span> experience_level <span class="sc">+</span> work_year,</span>
-<span id="cb149-4"><a href="#cb149-4" tabindex="-1"></a>  <span class="at">data =</span> train_df,</span>
-<span id="cb149-5"><a href="#cb149-5" tabindex="-1"></a>  <span class="at">size =</span> <span class="dv">5</span>,      <span class="co"># number of neurons in the hidden layer</span></span>
-<span id="cb149-6"><a href="#cb149-6" tabindex="-1"></a>  <span class="at">linout =</span> <span class="cn">TRUE</span>, <span class="co"># regression mode</span></span>
-<span id="cb149-7"><a href="#cb149-7" tabindex="-1"></a>  <span class="at">maxit =</span> <span class="dv">500</span>    <span class="co"># number of iterations</span></span>
-<span id="cb149-8"><a href="#cb149-8" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb147"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb147-1"><a href="#cb147-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># for reproducibility</span></span>
+<span id="cb147-2"><a href="#cb147-2" tabindex="-1"></a>mlp_model <span class="ot">&lt;-</span> <span class="fu">nnet</span>(</span>
+<span id="cb147-3"><a href="#cb147-3" tabindex="-1"></a>  salary_scaled <span class="sc">~</span> job_title <span class="sc">+</span> employment_type <span class="sc">+</span> work_models <span class="sc">+</span> company_size <span class="sc">+</span> experience_level <span class="sc">+</span> work_year,</span>
+<span id="cb147-4"><a href="#cb147-4" tabindex="-1"></a>  <span class="at">data =</span> train_df,</span>
+<span id="cb147-5"><a href="#cb147-5" tabindex="-1"></a>  <span class="at">size =</span> <span class="dv">5</span>,      <span class="co"># number of neurons in the hidden layer</span></span>
+<span id="cb147-6"><a href="#cb147-6" tabindex="-1"></a>  <span class="at">linout =</span> <span class="cn">TRUE</span>, <span class="co"># regression mode</span></span>
+<span id="cb147-7"><a href="#cb147-7" tabindex="-1"></a>  <span class="at">maxit =</span> <span class="dv">500</span>    <span class="co"># number of iterations</span></span>
+<span id="cb147-8"><a href="#cb147-8" tabindex="-1"></a>)</span></code></pre></div>
 <pre><code>## # weights:  576
 ## initial  value 6633.611089 
 ## final  value 159.081094 
@@ -13001,18 +12969,18 @@ using the cleaned dataset.</h1>
 </div>
 <div id="step-4-predict-on-test-set" class="section level1">
 <h1>Step 4: Predict on test set</h1>
-<div class="sourceCode" id="cb151"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb151-1"><a href="#cb151-1" tabindex="-1"></a>mlp_preds_scaled <span class="ot">&lt;-</span> <span class="fu">predict</span>(mlp_model, <span class="at">newdata =</span> test_df)</span></code></pre></div>
+<div class="sourceCode" id="cb149"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb149-1"><a href="#cb149-1" tabindex="-1"></a>mlp_preds_scaled <span class="ot">&lt;-</span> <span class="fu">predict</span>(mlp_model, <span class="at">newdata =</span> test_df)</span></code></pre></div>
 </div>
 <div id="step-5-rescale-predictions-back-to-original-salary-scale" class="section level1">
 <h1>Step 5: Rescale predictions back to original salary scale</h1>
-<div class="sourceCode" id="cb152"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb152-1"><a href="#cb152-1" tabindex="-1"></a>salary_min <span class="ot">&lt;-</span> <span class="fu">min</span>(test_df<span class="sc">$</span>salary_in_usd)</span>
-<span id="cb152-2"><a href="#cb152-2" tabindex="-1"></a>salary_max <span class="ot">&lt;-</span> <span class="fu">max</span>(test_df<span class="sc">$</span>salary_in_usd)</span>
-<span id="cb152-3"><a href="#cb152-3" tabindex="-1"></a>mlp_preds <span class="ot">&lt;-</span> mlp_preds_scaled <span class="sc">*</span> (salary_max <span class="sc">-</span> salary_min) <span class="sc">+</span> salary_min</span></code></pre></div>
+<div class="sourceCode" id="cb150"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb150-1"><a href="#cb150-1" tabindex="-1"></a>salary_min <span class="ot">&lt;-</span> <span class="fu">min</span>(test_df<span class="sc">$</span>salary_in_usd)</span>
+<span id="cb150-2"><a href="#cb150-2" tabindex="-1"></a>salary_max <span class="ot">&lt;-</span> <span class="fu">max</span>(test_df<span class="sc">$</span>salary_in_usd)</span>
+<span id="cb150-3"><a href="#cb150-3" tabindex="-1"></a>mlp_preds <span class="ot">&lt;-</span> mlp_preds_scaled <span class="sc">*</span> (salary_max <span class="sc">-</span> salary_min) <span class="sc">+</span> salary_min</span></code></pre></div>
 </div>
 <div id="step-6-evaluate-model-performance-using-rmse" class="section level1">
 <h1>Step 6: Evaluate model performance using RMSE</h1>
-<div class="sourceCode" id="cb153"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb153-1"><a href="#cb153-1" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((mlp_preds <span class="sc">-</span> test_df<span class="sc">$</span>salary_in_usd)<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb153-2"><a href="#cb153-2" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MLP Regression RMSE on test set:&quot;</span>, <span class="fu">round</span>(rmse, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb151"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb151-1"><a href="#cb151-1" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((mlp_preds <span class="sc">-</span> test_df<span class="sc">$</span>salary_in_usd)<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb151-2"><a href="#cb151-2" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MLP Regression RMSE on test set:&quot;</span>, <span class="fu">round</span>(rmse, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## MLP Regression RMSE on test set: 57593.42</code></pre>
 </div>
 
