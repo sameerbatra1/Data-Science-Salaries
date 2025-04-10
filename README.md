@@ -7,8 +7,8 @@ _Last updated: April 8, 2025_
 
 <h3>📅 Project Timeline/DEADLINE</h3>
 <ul>
-  <li><strong>April 10, 11PM</strong> ➜ Data preparation for modeling (<em>Yeobi</em>)</li>
-  <li><strong>April 12, 11PM</strong> ➜ Create machine learning models (<em>Jeongmin & Aditi</em>)</li>
+  <li><strong>April 10, 11PM</strong> ➜ Data preparation for modeling✅Completed   (<em>Yeobi</em>)</li>
+  <li><strong>April 12, 11PM</strong> ➜ Create machine learning models ✅Completed  (<em>Jeongmin & Aditi</em>)</li>
   <li><strong>April 12, 11PM</strong> ➜ (maybe) Create MLP Regression model (<em>Yeobi</em>)</li>
   <li><strong>April 14, 11PM</strong> ➜ Finalize and polish all modeling code (<em>Sameer</em>)</li>
   <li><strong>April 16, 11PM</strong> ➜ Complete presentation slides and visuals (<em>Sameer & Aditi</em>)</li>
