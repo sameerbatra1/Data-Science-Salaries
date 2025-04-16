@@ -704,3 +704,109 @@ mlp_preds <- mlp_preds_scaled * (salary_max - salary_min) + salary_min
 rmse <- sqrt(mean((mlp_preds - test_df$salary_in_usd)^2))
 cat("MLP Regression RMSE on test set:", round(rmse, 2), "\n")
 ```
+```{r} 
+#Linear regression
+# Load libraries
+# Load libraries
+library(tidyverse)
+library(caret)
+library(ggplot2)
+
+# Load the dataset
+df <- read.csv("data_science_salaries (2).csv")
+
+# Convert categorical variables to factors
+df$job_title <- as.factor(df$job_title)
+df$employment_type <- as.factor(df$employment_type)
+df$work_models <- as.factor(df$work_models)
+df$company_size <- as.factor(df$company_size)
+df$experience_level <- as.factor(df$experience_level)
+
+# Build the linear regression model
+model_lm <- lm(salary_in_usd ~ job_title + employment_type + work_models + company_size + experience_level + work_year,
+               data = df)
+
+# Summary of the model
+#summary(model_lm)
+
+# Predict on the dataset
+df$predicted_salary <- predict(model_lm, newdata = df)
+
+# RMSE Calculation
+rmse <- sqrt(mean((df$salary_in_usd - df$predicted_salary)^2))
+cat("Linear regression RMSE: ", round(rmse, 2), "\n")
+
+# Plot actual vs predicted salaries
+ggplot(df, aes(x = salary_in_usd, y = predicted_salary)) +
+  geom_point(alpha = 0.5, color = "green") +
+  geom_abline(color = "blue", linetype = "dashed") +
+  labs(
+    title = "Actual vs Predicted Salary (Linear Regression)",
+    x = "Actual Salary (USD)",
+    y = "Predicted Salary (USD)"
+  ) +
+  theme_minimal()
+
+```
+```{r}
+# Load libraries
+# Load libraries
+library(tidyverse)
+library(caret)
+library(xgboost)
+library(ggplot2)
+
+# Load data
+df <- read.csv("data_science_salaries (2).csv")
+
+# Convert categorical variables to factors
+df$job_title <- as.factor(df$job_title)
+df$employment_type <- as.factor(df$employment_type)
+df$work_models <- as.factor(df$work_models)
+df$company_size <- as.factor(df$company_size)
+df$experience_level <- as.factor(df$experience_level)
+
+# Encode factors as numeric for XGBoost
+df_matrix <- df %>%
+  mutate(across(c(job_title, employment_type, work_models, company_size, experience_level), as.integer)) %>%
+  select(salary_in_usd, job_title, employment_type, work_models, company_size, experience_level, work_year)
+
+# Split into training and test sets
+set.seed(123)
+train_index <- createDataPartition(df_matrix$salary_in_usd, p = 0.8, list = FALSE)
+train_data <- df_matrix[train_index, ]
+test_data <- df_matrix[-train_index, ]
+
+# Prepare data for XGBoost
+dtrain <- xgb.DMatrix(data = as.matrix(train_data[,-1]), label = train_data$salary_in_usd)
+dtest <- xgb.DMatrix(data = as.matrix(test_data[,-1]), label = test_data$salary_in_usd)
+
+# Train XGBoost model
+xgb_model <- xgboost(
+  data = dtrain,
+  objective = "reg:squarederror",
+  nrounds = 100,
+  verbose = 0
+)
+
+# Predict on test set
+xgb_preds <- predict(xgb_model, newdata = dtest)
+
+# RMSE
+rmse <- sqrt(mean((xgb_preds - test_data$salary_in_usd)^2))
+cat("XGBoost Regression RMSE:", round(rmse, 2), "\n")
+
+# Plot actual vs predicted
+ggplot(data.frame(actual = test_data$salary_in_usd, predicted = xgb_preds),
+       aes(x = actual, y = predicted)) +
+  geom_point(alpha = 0.5, color = "purple") +
+  geom_abline(color = "blue", linetype = "dashed") +
+  labs(
+    title = "Actual vs Predicted Salary (XGBoost)",
+    x = "Actual Salary (USD)",
+    y = "Predicted Salary (USD)"
+  ) +
+  theme_minimal()
+
+```
+```
