@@ -619,26 +619,13 @@ Results: Since the p-value(3.076e-09) is less than 0.05, we reject the null hypo
 ## 7. Continuing Final Project – Data Preparation for Modeling (Yeobi's Part)
 # This section finalizes the dataset for model training and evaluation.
 
-# Step 1: Re-create cleaned_salaries by removing outliers using IQR
-
-```{r}
-Q1 <- quantile(us_residents_df$salary_in_usd, 0.25)
-Q3 <- quantile(us_residents_df$salary_in_usd, 0.75)
-IQR <- Q3 - Q1
-lower_bound <- Q1 - 1.5 * IQR
-upper_bound <- Q3 + 1.5 * IQR
-
-cleaned_salaries <- us_residents_df[us_residents_df$salary_in_usd >= lower_bound &
-                                    us_residents_df$salary_in_usd <= upper_bound, ]
-```
-
-# Step 2: Convert categorical columns to factors
+# Convert categorical columns to factors
 ```{r}
 cat_vars <- c("job_title", "employment_type", "work_models", "company_size", "experience_level")
 cleaned_salaries[cat_vars] <- lapply(cleaned_salaries[cat_vars], as.factor)
 ```
 
-# Step 3: Split the data into 80/20 train-test sets
+# Split the data into 80/20 train-test sets
 ```{r}
 set.seed(123)
 train_index <- sample(seq_len(nrow(cleaned_salaries)), size = 0.8 * nrow(cleaned_salaries))
@@ -646,7 +633,7 @@ train_df <- cleaned_salaries[train_index, ]
 test_df <- cleaned_salaries[-train_index, ]
 ```
 
-# Step 4: Ensure consistency in factor levels between training and test sets
+# Ensure consistency in factor levels between training and test sets
 ```{r}
 for (col in cat_vars) {
   test_df[[col]] <- factor(test_df[[col]], levels = levels(train_df[[col]]))
@@ -705,22 +692,9 @@ rmse <- sqrt(mean((mlp_preds - test_df$salary_in_usd)^2))
 cat("MLP Regression RMSE on test set:", round(rmse, 2), "\n")
 ```
 ```{r} 
-#Linear regression
-# Load libraries
-# Load libraries
 library(tidyverse)
 library(caret)
 library(ggplot2)
-
-# Load the dataset
-df <- read.csv("data_science_salaries (2).csv")
-
-# Convert categorical variables to factors
-df$job_title <- as.factor(df$job_title)
-df$employment_type <- as.factor(df$employment_type)
-df$work_models <- as.factor(df$work_models)
-df$company_size <- as.factor(df$company_size)
-df$experience_level <- as.factor(df$experience_level)
 
 # Build the linear regression model
 model_lm <- lm(salary_in_usd ~ job_title + employment_type + work_models + company_size + experience_level + work_year,
