@@ -1,0 +1,892 @@
+---
+title: "Salary Trends in Data Science "
+author: "TEAM 3 - Jeongmin An, Yeobi Hobson, Sameer Batra, Aditi Shukla"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: readable
+    highlight: tango
+---
+
+# **Data Science Salary Trends (2020-2024)**  
+#### *Exploring how salaries have evolved and the key factors influencing earnings*
+
+---
+
+## **Table of Contents**
+- [Introduction](#introduction)
+- [Loading Dataset](#.loading Dataset)
+- [Data Cleaning](#.data cleaning)
+- [Exploratory Data Analysis](#exploratory-data-analysis)
+- [Statistical Analysis & Hypothesis Testing](#statistical-analysis-hypothesis-testing)
+- [Conclusion](#conclusion)
+- [References](#references)
+
+---
+
+## **1. Introduction**
+Data science is a rapidly evolving field, and salaries vary widely based on experience, job role, work model, and company size.  
+This analysis aims to uncover **salary trends from 2020 to 2024**, examining how different factors influence earnings.  
+
+Our key research questions:  
+- How have salaries changed over time?
+- What is the relationship between experience and salary?
+- Do work models (remote vs. in-person) impact earnings?
+- How does company size influence salary distribution?
+
+---
+
+
+
+## **2. Loading Dataset**
+**Source:** Kaggle Dataset (6,599 observations)  
+**Years Covered:** 2020-2024  
+```{r include=TRUE, echo=TRUE, results='markup'}
+#load packages
+library(dplyr)
+library(ggplot2)
+
+#load data
+salaries = read.csv("data_science_salaries.csv")
+```
+
+
+
+## **3. Data cleaning**
+### Check for missing values
+```{r include=TRUE, echo=TRUE, results='markup'}
+#check for missing values
+total_na <- sum(is.na(salaries))
+missing_summary <- colSums(is.na(salaries))
+cat("Total missing values:", total_na, "\n")
+print(missing_summary)
+
+# Display first few rows
+head(salaries)
+```
+Since no missing values are found, we proceed without handling missing data.
+
+### Check data structure and summary
+```{r include=TRUE, echo=TRUE, results='markup'}
+str(salaries)
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+summary(salaries)
+```
+
+### Check employee residence distribution
+```{r include=TRUE, echo=TRUE, results='hide'}
+# Create the grouped dataframe
+country_counts <- as.data.frame(table(salaries$employee_residence))
+colnames(country_counts) <- c("Country", "Frequency")
+
+# Arrange by Frequency in ascending order
+country_counts <- country_counts[order(country_counts$Frequency, decreasing = TRUE), ]
+
+# View the result
+country_counts
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Create the barplot
+ggplot(country_counts, aes(x = reorder(Country, -Frequency), y = Frequency)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Frequency of Employee Residence by Country",
+       x = "Country",
+       y = "Frequency") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+### Filter for US-Based Employees & Remove unnecessary columns
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Filter data(US)
+us_residents_df <- subset(salaries, employee_residence == "United States")
+
+##Since we are only working with us_residents dataframe we need to delete salary, salary_currency
+us_residents_df <- subset(us_residents_df, select= -c(employee_residence, salary, salary_currency))
+
+head(us_residents_df)
+```
+
+### Detecting Outliers Using IQR (Boxplot Method)
+```{r include=TRUE, echo=TRUE, results='hide'}
+# Function to find outliers using IQR and return entire rows
+find_outliers <- function(data, column_name) {
+  column <- data[[column_name]]
+  Q1 <- quantile(column, 0.25, na.rm = TRUE)
+  Q3 <- quantile(column, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  
+  # Define lower and upper bounds
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  
+  # Identify outliers (rows where the value is outside the bounds)
+  outliers <- data[column < lower_bound | column > upper_bound, ]
+  return(outliers)
+}
+
+# Apply function to salary and salary_in_usd
+outliers_salary_usd <- find_outliers(us_residents_df, "salary_in_usd")
+outliers_salary_usd
+
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Boxplot for Salary in USD
+ggplot(us_residents_df, aes(y = salary_in_usd)) +
+  geom_boxplot(fill = "lightblue", outlier.color = "red") +
+  labs(title = "Boxplot of Salary in USD", y = "Salary in USD")
+```
+
+### Remove outliers
+```{r include=TRUE, echo=TRUE, results='hide'}
+# Get the indices of the rows with outliers in salary and salary_in_usd
+outlier_rows_salary_usd <- which(us_residents_df$salary_in_usd %in% outliers_salary_usd$salary_in_usd)
+
+# Remove outliers from the original dataset using subset
+cleaned_salaries <- us_residents_df[-outlier_rows_salary_usd, ]
+cleaned_salaries
+```
+After removing the outliers, there are 5204 values in the dataframe. This means that 101 values were outliers.
+```{r include=TRUE, echo=TRUE, results='markup'}
+ggplot(cleaned_salaries, aes(y = salary_in_usd)) +
+  geom_boxplot(fill = "lightblue", outlier.color = "red") +
+  labs(title = "Boxplot of Salary in usd", y = "Salary")
+```
+
+### Detecting Outliers Using the ezids package
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+library(ezids)
+
+# Outlier Removal + Visualization
+us_residents_clean <- ezids::outlierKD2(us_residents_df, salary_in_usd, rm = TRUE, boxplt = TRUE, qqplt = TRUE)
+
+# Check normality after removing outliers 
+qqnorm(us_residents_clean$salary_in_usd, main = "QQ-Plot for Salary After Outlier Removal", col = "blue")
+qqline(us_residents_clean$salary_in_usd, col = "red")
+
+```
+
+
+
+
+## **4. Exploratory Data Analysis**
+### 1) How have salary trends in data science evolved from 2020 to 2024?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+#Check work_year value
+unique(cleaned_salaries$work_year)
+
+# Compute average salary by year
+salary_trends <- cleaned_salaries %>%
+  group_by(work_year) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+print(salary_trends)
+
+# Line plot for Salary Trends
+ggplot(salary_trends, aes(x = work_year, y = Avg_Salary_USD)) +
+  geom_line(color = "blue", linewidth = 1) +
+  geom_point(color = "red", size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Salary Trends in Data Science (2020-2024)", x = "Year", y = "Average Salary in USD") +
+  theme_minimal()
+
+# Box plot
+ggplot(cleaned_salaries, aes(x = as.factor(work_year), y = salary_in_usd, fill = as.factor(work_year))) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Salary Distribution by Year",x = "Year",y = "Salary in USD") +
+  theme_minimal()
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ as.factor(work_year), data = cleaned_salaries)
+summary(anova_result)
+
+
+```
+The ANOVA test reveals a highly significant effect of work year on salary (F = 6.716, p = 2.18e-05), indicating that salaries in data science have significantly changed over time.
+
+
+### 2) How do salaries vary across different experience levels in data science?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+#Check experience_level value
+unique(cleaned_salaries$experience_level)
+
+# Compute average salary and salary in USD by experience level
+experience_salary <- cleaned_salaries %>%
+  group_by(experience_level) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+# Display summary table
+print(experience_salary)
+
+library(scales)
+
+cleaned_salaries$experience_level <- factor(
+  cleaned_salaries$experience_level,
+  levels = c("Entry-level", "Mid-level", "Senior-level", "Executive-level")
+)
+
+# Visualize with Boxplot
+ggplot(cleaned_salaries, aes(x = experience_level, y = salary_in_usd, fill = experience_level)) +
+  geom_boxplot() +
+  labs(title = "Salary Distribution by Experience Level", x = "Experience Level", y = "Salary in USD") +
+  scale_y_continuous(labels = scales::comma)+
+  theme_minimal()
+
+library(dplyr)
+filtered_data <- cleaned_salaries %>% 
+  filter(experience_level == "Entry-level" & salary_in_usd  )
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ experience_level, data = cleaned_salaries)
+summary(anova_result)
+```
+The ANOVA test shows a highly significant effect of experience level on salary (F = 249.2, p < 2e-16), indicating substantial salary differences across experience levels.
+
+
+### 3) What is the average salary difference between work models data science jobs?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+#Check work_models value
+unique(cleaned_salaries$work_models)
+
+# Compute average salary by work model
+work_model_salary <- cleaned_salaries %>%
+  group_by(work_models) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n() 
+  )
+print(work_model_salary)
+
+# Boxplot of Salary by Work Model
+ggplot(cleaned_salaries, aes(x = work_models, y = salary_in_usd, fill = work_models)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::comma) + 
+  labs(title = "Salary Comparison: Remote vs. In-Person", x = "Work Model", y = "Salary in USD")+
+  theme_minimal()
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ work_models, data = cleaned_salaries)
+summary(anova_result)
+
+```
+The ANOVA test identifies a statistically significant difference in salaries across work models (F = 4.969, p = 0.00698), suggesting that at least one work model has a significantly different average salary."
+
+
+### 4) Difference in salaries with respect to company size
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+#Check company_size value
+unique(cleaned_salaries$company_size)
+
+salary_summary <- cleaned_salaries %>%
+  group_by(company_size) %>%
+  summarise(
+    mean_salary = mean(salary_in_usd, na.rm = TRUE),
+    median_salary = median(salary_in_usd, na.rm = TRUE),
+    count = n()
+  )
+
+print(salary_summary)
+
+
+#Box plot for Salary distribution by company size
+ggplot(cleaned_salaries, aes(x = company_size, y = salary_in_usd, fill = company_size)) +
+  geom_boxplot() +
+  labs(title = "Salary Distribution by Company Size", x = "Company Size", y = "Salary (USD)") +
+  scale_y_continuous(labels = comma)+
+  theme_minimal()
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ company_size, data = cleaned_salaries)
+summary(anova_result)
+
+```
+The ANOVA test reveals a statistically significant effect of company size on salary (F = 8.18, p = 0.000284), indicating that salaries vary significantly across different company sizes. 
+
+
+### 5) Which job title earned the most in 2024?
+```{r include=TRUE, echo=TRUE, results='markup'}
+
+salaries_2024 <- cleaned_salaries %>%
+  filter(work_year == 2024)
+
+# average salaries by job title
+top_job <- salaries_2024 %>%
+  group_by(job_title) %>%
+  summarise(
+    mean_salary = mean(salary_in_usd, na.rm = TRUE),
+    max_salary = max(salary_in_usd, na.rm = TRUE),
+    count = n()
+  ) %>%
+  arrange(desc(mean_salary))
+print(top_job)
+
+#top 10
+top_10_jobs <- top_job %>% slice_head(n = 10)
+
+ggplot(top_10_jobs, aes(x = reorder(job_title, mean_salary), y = mean_salary, fill = job_title)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  
+  labs(title = "Top 10 Highest Paying Job Titles in 2024", x = "Job Title", y = "Average Salary (USD)") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal()
+
+highest_paid_job <- salaries_2024 %>%
+  slice_max(salary_in_usd, n = 1)  
+print(highest_paid_job)
+```
+
+
+### 5-1)  What are the most common job title (Which job title hire the most)?
+#### Filter data by job title
+```{r include=TRUE, echo=TRUE, results='markup'}
+# Step 1: Calculate the frequencies of each job title
+job_title_freq <- table(cleaned_salaries$job_title)
+
+# Step 2: Create the frequency table as a data frame for plotting
+job_title_freq_df <- as.data.frame(job_title_freq)
+colnames(job_title_freq_df) <- c("job_title", "frequency") 
+
+# Plotting the histogram
+library(ggplot2)
+
+ggplot(job_title_freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +  # Bar plot for categorical data
+  labs(
+    title = "Job Title Frequencies",  # Plot title
+    x = "Job Title",  # X-axis label
+    y = "Frequency"   # Y-axis label
+  ) +
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability
+```
+Since this representation does not seem right we need to group the job_title categories that are less than 20 into other category and then convert the frequencies into logarthmic scale for better representation.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+freq_table <- table(cleaned_salaries$job_title)
+
+freq_df <- as.data.frame(freq_table, stringsAsFactors = FALSE)
+
+colnames(freq_df) <- c("job_title", "frequency")
+
+threshold <- 20
+
+freq_df$job_title[freq_df$frequency <= threshold] <- "Other"
+
+freq_df <- aggregate(frequency ~ job_title, data = freq_df, sum)
+
+freq_df <- freq_df[order(-freq_df$frequency), ]
+
+cleaned_salaries$job_title <- ifelse(
+  cleaned_salaries$job_title %in% freq_df$job_title,
+  cleaned_salaries$job_title, 
+  "Other"                     
+)
+cleaned_salaries
+```
+Rather than keeping job titles that appeared less than 20 times as separate titles, we aggregated them into "other" keyword.
+
+```{r include=TRUE, echo=TRUE, results='hide'}
+freq_df
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+  geom_bar(stat = "identity", fill = "skyblue") +  # Bar plot
+  labs(
+    title = "Job Title Frequencies",  # Plot title
+    x = "Job Title",  # X-axis label
+    y = "Frequency"   # Y-axis label
+  ) +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels
+```
+The above graph shows that job titles are right skewed.
+
+```{r include=TRUE, echo=TRUE, results='hide'}
+freq_df
+```
+
+```{r include=TRUE, echo=TRUE, results='hide'}
+cleaned_salaries
+unique(cleaned_salaries$employment_type)
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+str(cleaned_salaries)
+```
+
+
+
+## **5. Statistical Analysis & Hypothesis Testing**
+### Shapiro-Wilk test
+```{r include=TRUE, echo=TRUE, results='markup'}
+set.seed(123)
+# Subset the data into Full-time and Part-time groups
+full_time_data <- cleaned_salaries[cleaned_salaries$employment_type == "Full-time", ]
+# using only 5000 because shapiro only accepts sample size between 3 to 5000
+full_time_sample <- full_time_data[sample(nrow(full_time_data), 5000), ]
+part_time_data <- cleaned_salaries[cleaned_salaries$employment_type == "Part-time", ]
+contract_data <- cleaned_salaries[cleaned_salaries$employment_type=="Contract", ]
+
+# Conduct the Shapiro-Wilk test for Full-time salaries
+shapiro_test_full_time <- shapiro.test(full_time_sample$salary_in_usd)
+print(shapiro_test_full_time)
+
+# Conduct the Shapiro-Wilk test for Part-time salaries
+shapiro_test_part_time <- shapiro.test(part_time_data$salary_in_usd)
+print(shapiro_test_part_time)
+
+shapiro.test(contract_data$salary_in_usd)
+```
+
+Null Hypothesis: The salary data for Full-time employees is normally distributed.
+Alternate Hypothesis: The salary data for Full-time employees is not normally distributed.
+Results: Since the p-value is less than 2.2e-16, which is far smaller than the significance level (α = 0.05), we reject the null hypothesis. This suggests that there is enough evidence to conclude that the salary data for Full-time employees is not normally distributed.
+
+Null Hypothesis: The salary data for Part-time employees is normally distributed.
+Alternate Hypothesis: Part-time salary data does not significantly deviate from normality, meaning it is more likely to be normally distributed.
+Results: Since the p-value is 0.4491, which is greater than the significance level (α = 0.05), we fail to reject the null hypothesis. This suggests that there is insufficient evidence to conclude that the salary data for Part-time employees is not normally distributed.
+
+Null Hypothesis: The salary data for Contract employees is normally distributed.
+Alternate Hypothesis: The salary data for Contract employees is not normally distributed.
+Results: Since the p-value is 0.1172, which is greater than the significance level (α = 0.05), we fail to reject the null hypothesis. This suggests that there is insufficient evidence to conclude that the salary data for Contract employees is not normally distributed.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+data_manager <- cleaned_salaries[cleaned_salaries$job_title == "Data Manager", ]
+shapiro.test(data_manager$salary_in_usd)
+
+research_analyst <- cleaned_salaries[cleaned_salaries$job_title == "Research Analyst", ]
+shapiro.test(research_analyst$salary_in_usd)
+
+data_engineer <- cleaned_salaries[cleaned_salaries$job_title == "Data Engineer", ]
+shapiro.test(data_engineer$salary_in_usd)
+
+data_scientist <- cleaned_salaries[cleaned_salaries$job_title == "Data Scientist", ]
+shapiro.test(data_scientist$salary_in_usd)
+
+data_analyst <- cleaned_salaries[cleaned_salaries$job_title == "Data Analyst", ]
+shapiro.test(data_analyst$salary_in_usd)
+
+analytics_engineer <- cleaned_salaries[cleaned_salaries$job_title == "Analytics Engineer", ]
+shapiro.test(analytics_engineer$salary_in_usd)
+```
+Null Hypothesis: The salary data for Data Manager is normally distributed.
+Alternate hypothesis: The salary data for Data Manager is not normally distributed.
+results: Since the p-value (0.1905) is greater than the significance level (α = 0.05), we fail to reject the null hypothesis. This suggests that there is not enough evidence to conclude that the salary data for Data Manager is not normally distributed. Therefore, we can assume that the data follows a normal distribution.
+
+Null Hypothesis: The salary data for research analyst is normally distributed.
+Alternate hypothesis: The salary data for research analyst is not normally distributed.
+results: Since the p-value (0.0003165) is much less than the significance level (α = 0.05), we reject the null hypothesis. This indicates that there is enough evidence to conclude that the salary data for Research Analysts is not normally distributed.
+
+Final Result: From the above results we can conclude that only "Data Manager" and "Analytics Engineer" have normal distribution
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+qqnorm(data_manager$salary_in_usd, main = "Q-Q Plot for Data Manager Salaries")
+qqline(data_manager$salary_in_usd, col = "red", lwd = 2)
+
+qqnorm(analytics_engineer$salary_in_usd, main = "Q-Q Plot for Analytics Engineer Salaries")
+qqline(analytics_engineer$salary_in_usd, col = "red", lwd = 2)
+```
+
+### T-test
+```{r include=TRUE, echo=TRUE, results='markup'}
+t_test_result <- t.test(data_manager$salary_in_usd, analytics_engineer$salary_in_usd)
+
+# Print the t-test result
+print(t_test_result)
+```
+Null Hypothesis: The average salaries of Data Managers and Analytics Engineers are equal.
+Alternative Hypothesis: The average salaries of Data Managers and Analytics Engineers are not equal.
+Results: Given that the p-value is 1.513e-08 (which is much smaller than 0.05), we reject the null hypothesis. This means that there is a statistically significant difference in the average salaries of Data Managers and Analytics Engineers, with Analytics Engineers earning more on average than Data Managers.
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+#Conduct shapiro test and t-test if applicable on work models column
+unique(cleaned_salaries$work_models)
+```
+
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+remote <- cleaned_salaries[cleaned_salaries$work_models == "Remote", ]
+shapiro.test(remote$salary_in_usd)
+
+on_site_salaries <- cleaned_salaries[cleaned_salaries$work_models == "On-site", ]
+shapiro.test(on_site_salaries$salary_in_usd)
+
+hybrid <- cleaned_salaries[cleaned_salaries$work_models == "Hybrid", ]
+shapiro.test(hybrid$salary_in_usd)
+```
+Null Hypothesis: All of the work models are normally distributed
+Alternate Hypothesis: None of the work models are normally distributed
+Results: Since all of the p-values(7.492e-12, 2.2e-16, 0.03666) are less than 0.05 we reject the null hypothesis. None of the work models (Remote, On-site, or Hybrid) have salaries that follow a normal distribution based on the Shapiro-Wilk test results.
+
+```{r include=TRUE, echo=TRUE, results='hide'}
+cleaned_salaries
+```
+
+### Chi-Squared Test
+#### conducting chi-squared test between employment_type and work_models 
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$employment_type, cleaned_salaries$work_models)
+chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Employment Type and Work Models")
+print(chisq_test)
+chisq_test$expected
+```
+Null Hypothesis: There is no association between employment type and work model (they are independent).
+Alternate Hypothesis: There is an association between employment type and work model (they are dependent).
+Results: Since the p-value(6.673e-05) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between employment type and work model. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Contract, Contract:Remote, Part-time: Hybrid, Part-time: On-site, and Part-time: Remote are all less than 5, which may affect the reliability of the test.*
+
+#### conducting chi-squared test between company_size and work_models 
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$company_size, cleaned_salaries$work_models)
+chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Company Size and Work Models")
+print(chisq_test)
+chisq_test$expected
+```
+Null Hypothesis: There is no association between company_size and work model (they are independent).
+Alternate Hypothesis: There is an association between company_size and work model (they are dependent).
+Results: Since the p-value(<2.2e-16) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between company_size and work model. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Large, small:hybrid are all less than 5, which may affect the reliability of the test.*
+
+#### conducting chi-squared test between experience level and work_models
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$work_models, cleaned_salaries$experience_level)
+chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Experience Level and Work Models")
+print(chisq_test)
+chisq_test$expected
+```
+Null Hypothesis: There is no association between work model and experience level (they are independent).
+Alternate Hypothesis: There is an association between work model and experience level (they are dependent).
+Results: Since the p-value(<2.2e-16) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between work model and experience level. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Hybrid: Entry-level, and Hybrid:Executive-level are all less than 5, which may affect the reliability of the test.*
+
+#### conducting chi-squared test between experience level and employement type
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$experience_level, cleaned_salaries$employment_type)
+chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Experience Level and Employment Type")
+print(chisq_test)
+chisq_test$expected
+```
+Null Hypothesis: There is no association between experience level and employment type(they are independent).
+Alternate Hypothesis: There is an association between experience level and employment type(they are dependent).
+Results: Since the p-value(3.076e-09) is less than 0.05, we reject the null hypothesis. There is a statistically significant association between experience level and employment type. *However, we should be cautious about these results because, for a chi-squared test, the expected frequencies should be greater than 5. In this case, the expected counts for Entry-level:contract, Executive-level:contract, Entry-level:Part-time, Executive-level and part-time, mid-level:contract, mid-level:part-time and senior-level:part-time are all less than 5, which may affect the reliability of the test.*
+
+
+
+
+## **6. Conclusion**
+📌 **Key Takeaways:**  
+**Salaries have increased from 2020 to 2024**, likely due to growing demand.  
+**Experience level significantly impacts salary**, with senior professionals earning much more.  
+**Remote jobs offer higher salaries** than on-site roles.  
+**Larger companies tend to pay better** than small organizations.  
+**Statistical tests confirm significant relationships** between salary, experience, work model, and company size.
+
+
+
+## **References**
+1. Kaggle: Data Science Salaries Dataset  
+2. Tidyverse Package Documentation  
+3. R Graphics Cookbook
+
+
+-----------------------------
+
+
+## 7. Continuing Final Project – Data Preparation for Modeling (Yeobi's Part)
+# This section finalizes the dataset for model training and evaluation.
+
+# Step 1: Re-create cleaned_salaries by removing outliers using IQR
+
+```{r}
+Q1 <- quantile(us_residents_df$salary_in_usd, 0.25)
+Q3 <- quantile(us_residents_df$salary_in_usd, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+cleaned_salaries <- us_residents_df[us_residents_df$salary_in_usd >= lower_bound &
+                                    us_residents_df$salary_in_usd <= upper_bound, ]
+```
+
+# Step 2: Convert categorical columns to factors
+```{r}
+cat_vars <- c("job_title", "employment_type", "work_models", "company_size", "experience_level")
+cleaned_salaries[cat_vars] <- lapply(cleaned_salaries[cat_vars], as.factor)
+```
+
+# Step 3: Split the data into 80/20 train-test sets
+```{r}
+set.seed(123)
+train_index <- sample(seq_len(nrow(cleaned_salaries)), size = 0.8 * nrow(cleaned_salaries))
+train_df <- cleaned_salaries[train_index, ]
+test_df <- cleaned_salaries[-train_index, ]
+```
+
+# Step 4: Ensure consistency in factor levels between training and test sets
+```{r}
+for (col in cat_vars) {
+  test_df[[col]] <- factor(test_df[[col]], levels = levels(train_df[[col]]))
+}
+```
+
+# Step 5: View structure of resulting datasets
+```{r}
+str(train_df)
+str(test_df)
+```
+
+## 8. MLP Regression Model (Yeobi)
+# This section builds a simple neural network model to predict salary using the cleaned dataset.
+
+# Step 1: Load required package
+```{r}
+library(nnet)
+```
+# Step 2: Normalize the target variable (salary_in_usd)
+```{r}
+normalize <- function(x) {
+  return((x - min(x)) / (max(x) - min(x)))
+}
+
+train_df$salary_scaled <- normalize(train_df$salary_in_usd)
+test_df$salary_scaled <- normalize(test_df$salary_in_usd)
+```
+# Step 3: Train MLP regression model
+```{r}
+set.seed(123)  # for reproducibility
+mlp_model <- nnet(
+  salary_scaled ~ job_title + employment_type + work_models + company_size + experience_level + work_year,
+  data = train_df,
+  size = 5,      # number of neurons in the hidden layer
+  linout = TRUE, # regression mode
+  maxit = 500    # number of iterations
+)
+```
+
+# Step 4: Predict on test set
+```{r}
+mlp_preds_scaled <- predict(mlp_model, newdata = test_df)
+```
+
+# Step 5: Rescale predictions back to original salary scale
+```{r}
+salary_min <- min(test_df$salary_in_usd)
+salary_max <- max(test_df$salary_in_usd)
+mlp_preds <- mlp_preds_scaled * (salary_max - salary_min) + salary_min
+```
+
+# Step 6: Evaluate model performance using RMSE
+```{r}
+rmse <- sqrt(mean((mlp_preds - test_df$salary_in_usd)^2))
+cat("MLP Regression RMSE on test set:", round(rmse, 2), "\n")
+```
+
+
+
+
+
+## 9. Random Forest Regression (Jeongmin's part)
+
+# 1) Install and load required packages
+```{r}
+#install.packages("randomForest")
+#install.packages("caret")
+library(randomForest)
+library(caret)
+```
+
+The randomForest package internally handles categorical variables, but cannot properly handle variables with too many categories.
+# 2) Check which variables have many categories
+```{r}
+sapply(train_df, function(x) if (is.factor(x)) length(levels(x)))
+```
+The number of categories in job_title is too many, 104.
+Therefore, we need to reduce the number of categories in job_title so that the Random Forest model can run.
+
+# 3) Create a new variable by integrating job_title (job_group)
+```{r}
+library(dplyr)
+
+cleaned_salaries$job_group <- case_when(
+  grepl("Scientist", cleaned_salaries$job_title, ignore.case = TRUE) ~ "Data Scientist",
+  grepl("Engineer", cleaned_salaries$job_title, ignore.case = TRUE) ~ "Engineer",
+  grepl("Analyst", cleaned_salaries$job_title, ignore.case = TRUE) ~ "Analyst",
+  grepl("Manager", cleaned_salaries$job_title, ignore.case = TRUE) ~ "Manager",
+  grepl("Architect", cleaned_salaries$job_title, ignore.case = TRUE) ~ "Architect",
+  grepl("ML|AI|Machine Learning", cleaned_salaries$job_title, ignore.case = TRUE) ~ "ML/AI",
+  TRUE ~ "Other"
+)
+table(cleaned_salaries$job_group)
+
+# Remove existing variable and use job_group
+cleaned_salaries$job_group <- as.factor(cleaned_salaries$job_group)
+cleaned_salaries$job_title <- NULL
+```
+
+# 4) Split training/test data again (train_df / test_df)
+```{r}
+set.seed(123)
+train_index <- sample(seq_len(nrow(cleaned_salaries)), size = 0.8 * nrow(cleaned_salaries))
+train_df <- cleaned_salaries[train_index, ]
+test_df <- cleaned_salaries[-train_index, ]
+
+# Ensure consistency in factor levels between training and test sets
+cat_vars <- c("employment_type", "work_models", "company_size", "experience_level", "job_group")
+for (col in cat_vars) {
+  train_df[[col]] <- as.factor(train_df[[col]])
+  test_df[[col]] <- factor(test_df[[col]], levels = levels(train_df[[col]]))
+}
+```
+
+# 5) Training a random forest regression model
+```{r}
+set.seed(42)
+rf_model <- randomForest(
+  salary_in_usd ~ ., 
+  data = train_df,
+  ntree = 500,       
+  importance = TRUE
+)
+
+rf_pred <- predict(rf_model, newdata = test_df)
+head(data.frame(Actual = test_df$salary_in_usd, Predicted = rf_pred), 10)
+```
+Some predictions were much higher or lower than the actual results → The prediction error was quite large.
+
+
+# ----------------------------
+# Model Performance Evaluation
+# ----------------------------
+# 6) Calculating RMSE, R², MAE
+```{r}
+rmse_val <- RMSE(rf_pred, test_df$salary_in_usd)
+r2_val <- R2(rf_pred, test_df$salary_in_usd)
+mae_val <- MAE(rf_pred, test_df$salary_in_usd)
+
+cat("📈 Random Forest Model Performance\n")
+cat("RMSE:", round(rmse_val, 2), "\n")
+cat("R²:", round(r2_val, 4), "\n")
+cat("MAE:", round(mae_val, 2), "\n")
+
+# Visualizing variable importance
+varImpPlot(rf_model, main = "Variable Importance (Random Forest)")
+```
+When we used a random forest regression model to predict the salaries of data scientists, we found that the model's prediction accuracy was somewhat limited.
+The RMSE of the model is approximately $50,704, and the MAE is approximately $40,788, showing that there is a significant difference between the predicted value and the actual salary. In particular, R^2 value is 0.2334, which means that the input variables explain only about 23.3% of the salary variation. This suggests that the model does not contain enough information to explain the salary.
+
+
+Variable Importance :
+According to the variable importance plot from our Random Forest model, experience level and job group are the most influential factors in predicting salary. Variables such as work model, company size, and employment type had minimal impact, indicating that role and seniority level are far more critical in compensation trends than where or how the job is performed.
+Therefore, it seems that the application of additional advanced modeling techniques will be necessary.
+
+
+## 10. Support Vector Machine Regression (Jeongmin)
+
+# Why try SVM regression?
+# Random Forest had low performance (R²) and large error -> See if it can be improved with more precise margin-based prediction
+# Salary prediction may not be completely linear -> Using RBF kernel can also capture curvilinear trends
+
+# 1) Install and load required packages
+```{r}
+#install.packages("e1071") 
+library(e1071)
+library(caret)
+```
+
+# 2) Scaling excluding salary
+```{r}
+
+features_only <- train_df[, setdiff(names(train_df), "salary_in_usd")]
+pre_proc <- preProcess(features_only, method = c("center", "scale"))
+
+train_scaled <- predict(pre_proc, train_df)
+train_scaled$salary_in_usd <- train_df$salary_in_usd
+
+test_scaled <- predict(pre_proc, test_df)
+test_scaled$salary_in_usd <- test_df$salary_in_usd
+```
+
+# 3) Model training (SVM regression training)
+```{r}
+set.seed(42)
+svm_model <- svm(
+  salary_in_usd ~ .,
+  data = train_scaled,
+  kernel = "radial",
+  cost = 10,
+  epsilon = 0.1
+)
+
+svm_pred <- predict(svm_model, newdata = test_scaled)
+```
+
+# 4) SVM Prediction vs Actual Salary
+```{r}
+head(data.frame(Actual = test_df$salary_in_usd, Predicted = svm_pred), 10)
+
+library(ggplot2)
+ggplot(data.frame(Actual = test_scaled$salary_in_usd, Predicted = svm_pred),
+       aes(x = Actual, y = Predicted)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  labs(title = "SVM Prediction vs Actual Salary",
+       x = "Actual Salary", y = "Predicted Salary")
+```
+The SVM regression prediction results tended to be concentrated in the average annual salary range (around $150,000).
+High-income earners (e.g. $267,900) are predicted low
+Low-income earners (e.g. $62,100) are predicted high
+
+In other words, most predictions converged to the average value.
+This suggests that the SVM model had limitations in reflecting nonlinear relationships, or that kernel and parameter tuning were insufficient,
+and that more sophisticated hyperparameter tuning is needed in the future.
+
+# ----------------------------
+# Model Performance Evaluation
+# ----------------------------
+# 5) Calculating performance metrics
+```{r}
+svm_rmse <- RMSE(svm_pred, test_scaled$salary_in_usd)
+svm_r2   <- R2(svm_pred, test_scaled$salary_in_usd)
+svm_mae  <- MAE(svm_pred, test_scaled$salary_in_usd)
+
+cat("SVM regression performance\n")
+cat("RMSE:", round(svm_rmse, 2), "\n")
+cat("R²:", round(svm_r2, 4), "\n")
+cat("MAE:", round(svm_mae, 2), "\n")
+```
+The SVM regression model showed an RMSE of about $49,853, an MAE of about $39,271, and an R² of 0.2554, showing overall better performance than Random Forest.
+
+However, the prediction accuracy for high/low-income earners is still low, and the model tends to converge the prediction value to around the average annual salary. This suggests that in the future, more diverse variables need to be introduced and model tuning that effectively reflects nonlinear relationships is needed.
+
+
+
+```{r}
+
+```
+
+
+
