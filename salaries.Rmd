@@ -399,7 +399,7 @@ cleaned_salaries$job_title <- ifelse(
   cleaned_salaries$job_title, 
   "Other"                     
 )
-cleaned_salaries
+#cleaned_salaries
 ```
 Rather than keeping job titles that appeared less than 20 times as separate titles, we aggregated them into "other" keyword.
 
