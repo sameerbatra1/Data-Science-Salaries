@@ -615,7 +615,6 @@ Results: Since the p-value(3.076e-09) is less than 0.05, we reject the null hypo
 
 ---
 
-
 ## 7. Continuing Final Project – Data Preparation for Modeling (Yeobi's Part)
 # This section finalizes the dataset for model training and evaluation.
 
@@ -635,15 +634,7 @@ test_df <- cleaned_salaries[-train_index, ]
 
 # Ensure consistency in factor levels between training and test sets
 ```{r}
-for (col in cat_vars) {
-  test_df[[col]] <- factor(test_df[[col]], levels = levels(train_df[[col]]))
-}
-```
 
-# Step 5: View structure of resulting datasets
-```{r}
-str(train_df)
-str(test_df)
 ```
 
 ## 8. MLP Regression Model (Yeobi)
@@ -661,10 +652,29 @@ normalize <- function(x) {
 
 train_df$salary_scaled <- normalize(train_df$salary_in_usd)
 test_df$salary_scaled <- normalize(test_df$salary_in_usd)
+
+original_salaries_train <- test_df$salary_in_usd
+original_salaries_test <- test_df$salary_in_usd
+
+# Remove salary_in_usd from train_df and test_df
+train_df <- train_df %>%
+  select(-salary_in_usd)
+test_df <- test_df %>%
+  select(-salary_in_usd)
+
 ```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+X_train <- train_df[, -which(names(train_df) == "salary_in_usd")]
+y_train <- train_df$salary_in_usd
+X_test <- test_df[, -which(names(test_df) == "salary_in_usd")]
+y_test <- test_df$salary_in_usd
+```
+
 # Step 3: Train MLP regression model
 ```{r}
 set.seed(123)  # for reproducibility
+
 mlp_model <- nnet(
   salary_scaled ~ job_title + employment_type + work_models + company_size + experience_level + work_year,
   data = train_df,
@@ -691,37 +701,49 @@ mlp_preds <- mlp_preds_scaled * (salary_max - salary_min) + salary_min
 rmse <- sqrt(mean((mlp_preds - test_df$salary_in_usd)^2))
 cat("MLP Regression RMSE on test set:", round(rmse, 2), "\n")
 ```
+
 ```{r} 
 library(tidyverse)
 library(caret)
 library(ggplot2)
 
-# Build the linear regression model
-model_lm <- lm(salary_in_usd ~ job_title + employment_type + work_models + company_size + experience_level + work_year,
-               data = df)
+# Train linear regression on scaled salary
+model_lm <- lm(salary_scaled ~ job_title + experience_level + employment_type + work_models + work_year + company_size,
+               data = train_df)
 
-# Summary of the model
-#summary(model_lm)
+# Predict on test set (scaled salary)
+test_df$predicted_salary_scaled <- predict(model_lm, newdata = test_df)
 
-# Predict on the dataset
-df$predicted_salary <- predict(model_lm, newdata = df)
+# Calculate RMSE on scaled salary
+rmse <- sqrt(mean((test_df$salary_scaled - test_df$predicted_salary_scaled)^2))
+cat("Linear regression RMSE (scaled):", round(rmse, 4), "\n")
 
-# RMSE Calculation
-rmse <- sqrt(mean((df$salary_in_usd - df$predicted_salary)^2))
-cat("Linear regression RMSE: ", round(rmse, 2), "\n")
-
-# Plot actual vs predicted salaries
-ggplot(df, aes(x = salary_in_usd, y = predicted_salary)) +
+# Plot actual vs predicted (scaled)
+ggplot(test_df, aes(x = salary_scaled, y = predicted_salary_scaled)) +
   geom_point(alpha = 0.5, color = "green") +
   geom_abline(color = "blue", linetype = "dashed") +
   labs(
-    title = "Actual vs Predicted Salary (Linear Regression)",
-    x = "Actual Salary (USD)",
-    y = "Predicted Salary (USD)"
+    title = "Actual vs Predicted Scaled Salary (Linear Regression)",
+    x = "Actual Scaled Salary",
+    y = "Predicted Scaled Salary"
   ) +
   theme_minimal()
 
+
 ```
+```{r}
+# write me code to remove company location from train_df
+# Remove company location from train_df
+train_df <- train_df %>%
+  select(-company_location)
+test_df <- test_df %>%
+  select(-company_location)
+```
+
+```{r}
+str(train_df)
+```
+
 ```{r}
 # Load libraries
 # Load libraries
@@ -730,57 +752,175 @@ library(caret)
 library(xgboost)
 library(ggplot2)
 
-# Load data
-df <- read.csv("data_science_salaries (2).csv")
-
-# Convert categorical variables to factors
-df$job_title <- as.factor(df$job_title)
-df$employment_type <- as.factor(df$employment_type)
-df$work_models <- as.factor(df$work_models)
-df$company_size <- as.factor(df$company_size)
-df$experience_level <- as.factor(df$experience_level)
-
-# Encode factors as numeric for XGBoost
-df_matrix <- df %>%
+# Convert categorical variables to integer for train and test
+train_matrix <- train_df %>%
   mutate(across(c(job_title, employment_type, work_models, company_size, experience_level), as.integer)) %>%
-  select(salary_in_usd, job_title, employment_type, work_models, company_size, experience_level, work_year)
+  select(salary_scaled, job_title, employment_type, work_models, company_size, experience_level, work_year)
 
-# Split into training and test sets
-set.seed(123)
-train_index <- createDataPartition(df_matrix$salary_in_usd, p = 0.8, list = FALSE)
-train_data <- df_matrix[train_index, ]
-test_data <- df_matrix[-train_index, ]
+test_matrix <- test_df %>%
+  mutate(across(c(job_title, employment_type, work_models, company_size, experience_level), as.integer)) %>%
+  select(salary_scaled, job_title, employment_type, work_models, company_size, experience_level, work_year)
 
-# Prepare data for XGBoost
-dtrain <- xgb.DMatrix(data = as.matrix(train_data[,-1]), label = train_data$salary_in_usd)
-dtest <- xgb.DMatrix(data = as.matrix(test_data[,-1]), label = test_data$salary_in_usd)
+# Separate features and labels
+X_train <- train_matrix %>% select(-salary_scaled)
+y_train <- train_matrix$salary_scaled
 
-# Train XGBoost model
+X_test <- test_matrix %>% select(-salary_scaled)
+y_test <- test_matrix$salary_scaled
+
+# Create DMatrix objects for XGBoost
+xgb_train <- xgb.DMatrix(data = as.matrix(X_train), label = y_train)
+xgb_test <- xgb.DMatrix(data = as.matrix(X_test), label = y_test)
+
+# Train XGBoost regression model
 xgb_model <- xgboost(
-  data = dtrain,
+  data = xgb_train,
   objective = "reg:squarederror",
   nrounds = 100,
   verbose = 0
 )
 
 # Predict on test set
-xgb_preds <- predict(xgb_model, newdata = dtest)
+xgb_preds <- predict(xgb_model, xgb_test)
 
-# RMSE
-rmse <- sqrt(mean((xgb_preds - test_data$salary_in_usd)^2))
+# Calculate RMSE
+rmse <- sqrt(mean((xgb_preds - y_test)^2))
 cat("XGBoost Regression RMSE:", round(rmse, 2), "\n")
 
-# Plot actual vs predicted
-ggplot(data.frame(actual = test_data$salary_in_usd, predicted = xgb_preds),
+# Plot actual vs predicted salaries
+ggplot(data.frame(actual = y_test, predicted = xgb_preds),
        aes(x = actual, y = predicted)) +
   geom_point(alpha = 0.5, color = "purple") +
   geom_abline(color = "blue", linetype = "dashed") +
   labs(
     title = "Actual vs Predicted Salary (XGBoost)",
-    x = "Actual Salary (USD)",
-    y = "Predicted Salary (USD)"
+    x = "Actual Salary (Scaled)",
+    y = "Predicted Salary (Scaled)"
   ) +
   theme_minimal()
 
 ```
+Training a random forest regression model
+
+```{r}
+library(randomForest)
+
+set.seed(42)
+rf_model <- randomForest(
+  salary_scaled ~ ., 
+  data = train_df,
+  ntree = 500,       
+  importance = TRUE
+)
+
+rf_pred <- predict(rf_model, newdata = test_df)
+# convert rf_pred back to original scale
+rf_pred <- rf_pred * (salary_max - salary_min) + salary_min
 ```
+Some predictions were much higher or lower than the actual results → The prediction error was quite large.
+
+
+# ----------------------------
+# Model Performance Evaluation
+# ----------------------------
+# 6) Calculating RMSE, R², MAE
+```{r}
+rmse_val <- RMSE(rf_pred, test_df$salary_scaled)
+r2_val <- R2(rf_pred, test_df$salary_scaled)
+mae_val <- MAE(rf_pred, test_df$salary_scaled)
+
+cat("📈 Random Forest Model Performance\n")
+cat("RMSE:", round(rmse_val, 2), "\n")
+cat("R²:", round(r2_val, 4), "\n")
+cat("MAE:", round(mae_val, 2), "\n")
+
+# Visualizing variable importance
+varImpPlot(rf_model, main = "Variable Importance (Random Forest)")
+```
+When we used a random forest regression model to predict the salaries of data scientists, we found that the model's prediction accuracy was somewhat limited.
+The RMSE of the model is approximately $50,704, and the MAE is approximately $40,788, showing that there is a significant difference between the predicted value and the actual salary. In particular, R^2 value is 0.2334, which means that the input variables explain only about 23.3% of the salary variation. This suggests that the model does not contain enough information to explain the salary.
+
+
+Variable Importance :
+According to the variable importance plot from our Random Forest model, experience level and job group are the most influential factors in predicting salary. Variables such as work model, company size, and employment type had minimal impact, indicating that role and seniority level are far more critical in compensation trends than where or how the job is performed.
+Therefore, it seems that the application of additional advanced modeling techniques will be necessary.
+
+
+## 10. Support Vector Machine Regression (Jeongmin)
+
+# Why try SVM regression?
+# Random Forest had low performance (R²) and large error -> See if it can be improved with more precise margin-based prediction
+# Salary prediction may not be completely linear -> Using RBF kernel can also capture curvilinear trends
+
+# 1) Install and load required packages
+```{r}
+#install.packages("e1071") 
+library(e1071)
+library(caret)
+```
+
+# 2) Scaling excluding salary
+```{r}
+features_only <- train_df[, setdiff(names(train_df), "salary_in_usd")]
+pre_proc <- preProcess(features_only, method = c("center", "scale"))
+
+train_scaled <- predict(pre_proc, train_df)
+train_scaled$salary_in_usd <- train_df$salary_in_usd
+
+test_scaled <- predict(pre_proc, test_df)
+test_scaled$salary_in_usd <- test_df$salary_in_usd
+```
+
+# 3) Model training (SVM regression training)
+```{r}
+set.seed(42)
+svm_model <- svm(
+  salary_in_usd ~ .,
+  data = train_scaled,
+  kernel = "radial",
+  cost = 10,
+  epsilon = 0.1
+)
+
+svm_pred <- predict(svm_model, newdata = test_scaled)
+```
+
+# 4) SVM Prediction vs Actual Salary
+```{r}
+head(data.frame(Actual = test_df$salary_in_usd, Predicted = svm_pred), 10)
+
+library(ggplot2)
+ggplot(data.frame(Actual = test_scaled$salary_in_usd, Predicted = svm_pred),
+       aes(x = Actual, y = Predicted)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  labs(title = "SVM Prediction vs Actual Salary",
+       x = "Actual Salary", y = "Predicted Salary")
+```
+The SVM regression prediction results tended to be concentrated in the average annual salary range (around $150,000).
+High-income earners (e.g. $267,900) are predicted low
+Low-income earners (e.g. $62,100) are predicted high
+
+In other words, most predictions converged to the average value.
+This suggests that the SVM model had limitations in reflecting nonlinear relationships, or that kernel and parameter tuning were insufficient,
+and that more sophisticated hyperparameter tuning is needed in the future.
+
+# ----------------------------
+# Model Performance Evaluation
+# ----------------------------
+# 5) Calculating performance metrics
+```{r}
+svm_rmse <- RMSE(svm_pred, test_scaled$salary_in_usd)
+svm_r2   <- R2(svm_pred, test_scaled$salary_in_usd)
+svm_mae  <- MAE(svm_pred, test_scaled$salary_in_usd)
+
+cat("SVM regression performance\n")
+cat("RMSE:", round(svm_rmse, 2), "\n")
+cat("R²:", round(svm_r2, 4), "\n")
+cat("MAE:", round(svm_mae, 2), "\n")
+```
+The SVM regression model showed an RMSE of about $49,853, an MAE of about $39,271, and an R² of 0.2554, showing overall better performance than Random Forest.
+
+However, the prediction accuracy for high/low-income earners is still low, and the model tends to converge the prediction value to around the average annual salary. This suggests that in the future, more diverse variables need to be introduced and model tuning that effectively reflects nonlinear relationships is needed.
+
+
