@@ -1,69 +1,66 @@
-# Data-Science-Salaries
-#March 3, 2025 updates
+# Predicting Data Science Salaries in 2025  
+**TEAM 3 – DATS 6101 Final Project**  
+_Last updated: April 8, 2025_
 
-## 📌 Timeline Overview
+---
+<h2>📝 Meeting Notes (April 8, 2025)</h2>
 
-| **Task** | **Deadline** | **Status** |
-|----------|-------------|------------|
-| **Topic Proposal Submission** | **March 5** | ✅ Completed |
-| **EDA & Statistical Analysis** | **March 19** | ✅ Completed |
-| **Presentation Preparation** | **March 19** | ✅ Completed |
-| **Final Research Paper Submission** | **March 26** | ⏳ Pending |
-| **GitHub Repository Maintenance** | **Ongoing** | ✅ Active |
-
-✅ **GitHub will be used to track progress**  
-✅ **All updates should be committed regularly**
-
-
-
-##this is googole doc for Topic Proposal: Analyzing Salary Trends in Data Science (iT iS completed!!!! 👍 )
-###https://docs.google.com/document/d/1TonihM2pEICN_JhDjw1G4cQPScTqqWj9scFf5tIRjkU/edit?usp=sharing
+<h3>📅 Project Timeline/DEADLINE</h3>
+<ul>
+  <li><strong>April 10, 11PM</strong> ➜ Data preparation for modeling✅Completed   (<em>Yeobi</em>)</li>
+  <li><strong>April 12, 11PM</strong> ➜ Create machine learning models ((✅completed)<em>Jeongmin & (✅completed)Aditi</em>)</li>
+  <li><strong>April 12, 11PM</strong> ➜ (maybe) Create MLP Regression model✅Completed   (<em>Yeobi</em>)</li>
+  <li><strong>April 14, 11PM</strong> ➜ Finalize and polish all modeling code (<em>Sameer</em>)</li>
+  <li><strong>April 16, 11PM</strong> ➜ Complete presentation slides and visuals (<em>Sameer & Aditi</em>)</li>
+  <li><strong>April 18, 11PM</strong> ➜ Submit final paper (10-page HTML summary) (<em>Yeobi & Jeongmin</em>)</li>
+</ul>
 
 
+---
+
+## 📌 Final Project Timeline & Status
+
+| **Milestone**                           | **Deadline**           | **Status**         |
+|-----------------------------------------|-------------------------|---------------------|
+| Topic Proposal Submission               | April 16 (Wed) EOD      |  ✅Completed        |
+| Code + HTML Submission (RMD)            | April 23 (Wed) EOD      | ⏳ Upcoming         |
+| Team Presentation in Class              | April 23 (Wed) Class    | ⏳ Upcoming         |
+| Final Paper (10-page HTML Summary)      | April 30 (Wed) EOD      | ⏳ Upcoming         |
+| GitHub Repo Activity (Ongoing)          | April 9–30              |    Active           |
+
+✅ GitHub is used to track commits, branches, and individual team member contributions (graded).
+
+---
 
 
-##this is Canva slide for Presentation 
-###(https://www.canva.com/design/DAGhtx4Gtdw/0JQPRMqfC4VT2w2OVK3ZWQ/edit?utm_content=DAGhtx4Gtdw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
-
-##this is googole doc for final research paper
-###https://docs.google.com/document/d/1muooCcFn-6SBPMr2qs-wUV4A38U7KIOdbBBpLQJEHb0/edit?usp=sharing
---
+## 📂 Project Links
 
 
-###This is submitted topic proposal
-### 📌 Submitted Topic Proposal
-
-## **Topic Proposal: Analyzing Salary Trends in Data Science**  
-**TEAM 3**  
-
-### **a) Research Topic**  
-Data science is a fast-growing field, and salaries can vary widely based on **experience, job role, and whether someone works remotely or in an office**. As demand for data professionals grows, understanding how these factors influence earnings becomes increasingly important.  
-
-This project will analyze **salary trends from 2020 to 2024**, exploring how salaries have changed over time and whether there are identifiable trends in salary growth. This analysis will provide insights into **earning potential for data science professionals** and inform **hiring trends in the industry**.  
-
----  
-
-### **b) SMART Question**  
-**How has the salary of Data Scientists changed from 2020 to 2024, and can we identify a trend in salary growth?**  
-
-- **Specific:** Examines salary trends for Data Scientists over a defined period.  
-- **Measurable:** Can be analyzed by calculating yearly salary trends.  
-- **Achievable:** The dataset contains salary data for Data Scientists from **2020 to 2024**.  
-- **Relevant:** Provides insights into salary growth patterns in the data science field.  
-- **Time-bound:** Focused on salaries from **2020 to 2024**.  
-
----  
-
-### **c) Dataset Information**  
-- **Dataset Name:** Data Science Salaries 2024  
-- **Source:** Kaggle Dataset  
-- **Number of Observations:** 6,599 rows  
-- **Years Covered:** 2020–2024  
-
----  
-
-### **d) GitHub Repository**  
-🔗 [GitHub Link](https://github.com/sameerbatra1/Data-Science-Salaries)  
+- 📝 [Final Topic Proposal (Google Doc)](https://docs.google.com/document/d/1TonihM2pEICN_JhDjw1G4cQPScTqqWj9scFf5tIRjkU/edit?tab=t.0#heading=h.9bmkoplnagtk)
+- 📽️ [Team Presentation Slides (Google Slides/Canva)](link-here)
+- 💻 [GitHub Repository – Team 3](https://github.com/sameerbatra1/Data-Science-Salaries)
 
 
+---
+
+## 📌 Dataset Summary
+
+| Feature             | Value                         |
+|---------------------|-------------------------------|
+| Dataset Name        | Data Science Salaries 2024     |
+| Source              | Kaggle                         |
+| Observations        | 6,599                          |
+| Years Covered       | 2020–2024                      |
+| Key Variables       | Salary (USD), Job Title, Experience Level, Remote Ratio, Company Size |
+
+---
+
+## ✅ Completed Components (Midterm)
+
+- ✔️ Topic Proposal
+- ✔️ Data Cleaning
+- ✔️ Exploratory Data Analysis
+- ✔️ ANOVA, T-Tests, Chi-Square Tests
+- ✔️ Visualizations of Trends
+- ✔️ Midterm Report & Presentation
 
