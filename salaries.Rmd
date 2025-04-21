@@ -702,6 +702,9 @@ rmse <- sqrt(mean((mlp_preds - test_df$salary_in_usd)^2))
 cat("MLP Regression RMSE on test set:", round(rmse, 2), "\n")
 ```
 
+
+
+
 ```{r} 
 library(tidyverse)
 library(caret)
@@ -743,6 +746,8 @@ test_df <- test_df %>%
 ```{r}
 str(train_df)
 ```
+
+
 
 ```{r}
 # Load libraries
@@ -800,6 +805,8 @@ ggplot(data.frame(actual = y_test, predicted = xgb_preds),
   theme_minimal()
 
 ```
+
+
 Training a random forest regression model
 
 ```{r}
@@ -807,29 +814,42 @@ library(randomForest)
 
 set.seed(42)
 rf_model <- randomForest(
-  salary_scaled ~ ., 
+  salary_scaled ~  job_title + experience_level + employment_type + work_models + work_year + company_size,
   data = train_df,
   ntree = 500,       
   importance = TRUE
 )
 
-rf_pred <- predict(rf_model, newdata = test_df)
-# convert rf_pred back to original scale
-rf_pred <- rf_pred * (salary_max - salary_min) + salary_min
+#Predict on test set (scaled salary)
+rf_pred_scaled <- predict(rf_model, newdata = test_df)
+head(rf_pred_scaled)
+# convert rf_pred back to original scale  
+rf_pred <- rf_pred_scaled * (salary_max - salary_min) + salary_min
+head(rf_pred)
 ```
-Some predictions were much higher or lower than the actual results → The prediction error was quite large.
+```{r}
+library(ggplot2)
 
+ggplot(data.frame(Actual = test_df$salary_in_usd, Predicted = rf_pred),
+       aes(x = Actual, y = Predicted)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Random Forest: Predicted vs Actual Salary",
+       x = "Actual Salary (USD)",
+       y = "Predicted Salary (USD)") +
+  theme_minimal()
+```
 
 # ----------------------------
 # Model Performance Evaluation
 # ----------------------------
-# 6) Calculating RMSE, R², MAE
+# Calculating RMSE, R², MAE
 ```{r}
-rmse_val <- RMSE(rf_pred, test_df$salary_scaled)
-r2_val <- R2(rf_pred, test_df$salary_scaled)
-mae_val <- MAE(rf_pred, test_df$salary_scaled)
+rmse_val <- RMSE(rf_pred, test_df$salary_in_usd)
+r2_val <- R2(rf_pred, test_df$salary_in_usd)
+mae_val <- MAE(rf_pred, test_df$salary_in_usd)
 
-cat("📈 Random Forest Model Performance\n")
+cat("Random Forest Model Performance\n")
 cat("RMSE:", round(rmse_val, 2), "\n")
 cat("R²:", round(r2_val, 4), "\n")
 cat("MAE:", round(mae_val, 2), "\n")
@@ -837,13 +857,10 @@ cat("MAE:", round(mae_val, 2), "\n")
 # Visualizing variable importance
 varImpPlot(rf_model, main = "Variable Importance (Random Forest)")
 ```
-When we used a random forest regression model to predict the salaries of data scientists, we found that the model's prediction accuracy was somewhat limited.
-The RMSE of the model is approximately $50,704, and the MAE is approximately $40,788, showing that there is a significant difference between the predicted value and the actual salary. In particular, R^2 value is 0.2334, which means that the input variables explain only about 23.3% of the salary variation. This suggests that the model does not contain enough information to explain the salary.
-
-
 Variable Importance :
 According to the variable importance plot from our Random Forest model, experience level and job group are the most influential factors in predicting salary. Variables such as work model, company size, and employment type had minimal impact, indicating that role and seniority level are far more critical in compensation trends than where or how the job is performed.
 Therefore, it seems that the application of additional advanced modeling techniques will be necessary.
+
 
 
 ## 10. Support Vector Machine Regression (Jeongmin)
@@ -852,74 +869,60 @@ Therefore, it seems that the application of additional advanced modeling techniq
 # Random Forest had low performance (R²) and large error -> See if it can be improved with more precise margin-based prediction
 # Salary prediction may not be completely linear -> Using RBF kernel can also capture curvilinear trends
 
-# 1) Install and load required packages
+# Install and load required packages
 ```{r}
 #install.packages("e1071") 
 library(e1071)
 library(caret)
 ```
 
-# 2) Scaling excluding salary
-```{r}
-features_only <- train_df[, setdiff(names(train_df), "salary_in_usd")]
-pre_proc <- preProcess(features_only, method = c("center", "scale"))
-
-train_scaled <- predict(pre_proc, train_df)
-train_scaled$salary_in_usd <- train_df$salary_in_usd
-
-test_scaled <- predict(pre_proc, test_df)
-test_scaled$salary_in_usd <- test_df$salary_in_usd
-```
-
-# 3) Model training (SVM regression training)
+# Model training (SVM regression training)
 ```{r}
 set.seed(42)
 svm_model <- svm(
-  salary_in_usd ~ .,
-  data = train_scaled,
+  salary_scaled ~ job_title + employment_type + work_models + company_size + experience_level + work_year,,
+  data = train_df,
   kernel = "radial",
   cost = 10,
   epsilon = 0.1
 )
 
-svm_pred <- predict(svm_model, newdata = test_scaled)
+svm_pred_scaled <- predict(svm_model, newdata = test_df)
+head(svm_pred_scaled)
+svm_pred <- svm_pred_scaled * (salary_max - salary_min) + salary_min
+head(svm_pred)
 ```
 
-# 4) SVM Prediction vs Actual Salary
+# SVM Prediction vs Actual Salary
 ```{r}
-head(data.frame(Actual = test_df$salary_in_usd, Predicted = svm_pred), 10)
-
 library(ggplot2)
-ggplot(data.frame(Actual = test_scaled$salary_in_usd, Predicted = svm_pred),
-       aes(x = Actual, y = Predicted)) +
-  geom_point(alpha = 0.5) +
-  geom_abline(slope = 1, intercept = 0, color = "red") +
-  labs(title = "SVM Prediction vs Actual Salary",
-       x = "Actual Salary", y = "Predicted Salary")
-```
-The SVM regression prediction results tended to be concentrated in the average annual salary range (around $150,000).
-High-income earners (e.g. $267,900) are predicted low
-Low-income earners (e.g. $62,100) are predicted high
 
-In other words, most predictions converged to the average value.
-This suggests that the SVM model had limitations in reflecting nonlinear relationships, or that kernel and parameter tuning were insufficient,
-and that more sophisticated hyperparameter tuning is needed in the future.
+ggplot(data.frame(Actual = test_df$salary_in_usd, Predicted = svm_pred), 
+       aes(x = Actual, y = Predicted)) +
+  geom_point(alpha = 0.5, color = "darkgreen") +
+  geom_abline(slope = 1, intercept = 0, color = "blue", linetype = "dashed") +
+  labs(title = "SVM: Predicted vs Actual Salary",
+       x = "Actual Salary (USD)",
+       y = "Predicted Salary (USD)") +
+  theme_minimal()
+
+```
 
 # ----------------------------
 # Model Performance Evaluation
 # ----------------------------
 # 5) Calculating performance metrics
 ```{r}
-svm_rmse <- RMSE(svm_pred, test_scaled$salary_in_usd)
-svm_r2   <- R2(svm_pred, test_scaled$salary_in_usd)
-svm_mae  <- MAE(svm_pred, test_scaled$salary_in_usd)
+svm_rmse <- RMSE(svm_pred, test_df$salary_in_usd)
+svm_r2   <- R2(svm_pred, test_df$salary_in_usd)
+svm_mae  <- MAE(svm_pred, test_df$salary_in_usd)
 
 cat("SVM regression performance\n")
 cat("RMSE:", round(svm_rmse, 2), "\n")
 cat("R²:", round(svm_r2, 4), "\n")
 cat("MAE:", round(svm_mae, 2), "\n")
 ```
-The SVM regression model showed an RMSE of about $49,853, an MAE of about $39,271, and an R² of 0.2554, showing overall better performance than Random Forest.
+The SVM regression model showed an RMSE of about $49,133, an MAE of about $38,736, and an R² of 0.2937, showing overall better performance than Random Forest.
 
 However, the prediction accuracy for high/low-income earners is still low, and the model tends to converge the prediction value to around the average annual salary. This suggests that in the future, more diverse variables need to be introduced and model tuning that effectively reflects nonlinear relationships is needed.
 
