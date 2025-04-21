@@ -641,8 +641,6 @@ cleaned_salaries$employment_type <- as.factor(cleaned_salaries$employment_type)
 cleaned_salaries$work_models <- as.factor(cleaned_salaries$work_models)
 cleaned_salaries$company_size <- as.factor(cleaned_salaries$company_size)
 
-
-# Drop company_location column 
 cleaned_salaries <- cleaned_salaries %>%
   select(-company_location)
 
@@ -694,35 +692,32 @@ min(cleaned_salaries$salary_in_usd)
 max(cleaned_salaries$salary_in_usd)
 ```
 
+
+
 ```{r}
-# Load libraries
 # Load libraries
 library(tidyverse)
 library(caret)
 library(xgboost)
 library(ggplot2)
 
-# Convert categorical variables to integer for train and test
-train_matrix <- train_df %>%
+train_matrix <- train_data %>%
   mutate(across(c(job_title, employment_type, work_models, company_size, experience_level), as.integer)) %>%
-  select(salary_scaled, job_title, employment_type, work_models, company_size, experience_level, work_year)
+  select(salary_in_usd, job_title, employment_type, work_models, company_size, experience_level, work_year)
 
-test_matrix <- test_df %>%
+test_matrix <- test_data %>%
   mutate(across(c(job_title, employment_type, work_models, company_size, experience_level), as.integer)) %>%
-  select(salary_scaled, job_title, employment_type, work_models, company_size, experience_level, work_year)
+  select(salary_in_usd, job_title, employment_type, work_models, company_size, experience_level, work_year)
 
-# Separate features and labels
-X_train <- train_matrix %>% select(-salary_scaled)
-y_train <- train_matrix$salary_scaled
+X_train <- train_matrix %>% select(-salary_in_usd)
+y_train <- train_matrix$salary_in_usd
 
-X_test <- test_matrix %>% select(-salary_scaled)
-y_test <- test_matrix$salary_scaled
+X_test <- test_matrix %>% select(-salary_in_usd)
+y_test <- test_matrix$salary_in_usd
 
-# Create DMatrix objects for XGBoost
 xgb_train <- xgb.DMatrix(data = as.matrix(X_train), label = y_train)
 xgb_test <- xgb.DMatrix(data = as.matrix(X_test), label = y_test)
 
-# Train XGBoost regression model
 xgb_model <- xgboost(
   data = xgb_train,
   objective = "reg:squarederror",
@@ -730,20 +725,17 @@ xgb_model <- xgboost(
   verbose = 0
 )
 
-# Predict on test set
 xgb_preds <- predict(xgb_model, xgb_test)
 
-# Calculate RMSE
 xgb_rmse <- sqrt(mean((xgb_preds - y_test)^2))
-# calculate mae and r2
 xgb_mae <- mean(abs(xgb_preds - y_test))
 xgb_r2 <- 1 - (sum((y_test - xgb_preds)^2) / sum((y_test - mean(y_test))^2))
 cat("XGBoost Regression RMSE:", round(xgb_rmse, 2), "\n")
 cat("XGBoost Regression MAE:", round(xgb_mae, 2), "\n")
 cat("XGBoost Regression R2:", round(xgb_r2, 2), "\n")
 
-xgb_preds <- xgb_preds * (salary_max - salary_min) + salary_min
-y_test <- y_test * (salary_max - salary_min) + salary_min
+#xgb_preds <- xgb_preds * (salary_max - salary_min) + salary_min
+#y_test <- y_test * (salary_max - salary_min) + salary_min
 xgb_mape <- mean(abs((xgb_preds - y_test ) / y_test)) * 100
 
 results_df <- data.frame(
@@ -751,7 +743,6 @@ results_df <- data.frame(
   Value = c(round(xgb_rmse, 4), round(xgb_mae, 4), round(xgb_r2, 4), round(xgb_mape, 4))
 )
 
-# Plot actual vs predicted salaries
 ggplot(data.frame(actual = y_test, predicted = xgb_preds),
        aes(x = actual, y = predicted)) +
   geom_point(alpha = 0.5, color = "purple") +
@@ -772,15 +763,13 @@ library(randomForest)
 
 set.seed(42)
 rf_model <- randomForest(
-  salary_scaled ~ ., 
-  data = train_df,
+  salary_in_usd ~ ., 
+  data = train_data,
   ntree = 500,       
   importance = TRUE
 )
 
-rf_pred <- predict(rf_model, newdata = test_df)
-# convert rf_pred back to original scale
-rf_pred <- rf_pred * (salary_max - salary_min) + salary_min
+rf_pred <- predict(rf_model, newdata = test_data)
 ```
 Some predictions were much higher or lower than the actual results → The prediction error was quite large.
 
@@ -790,17 +779,16 @@ Some predictions were much higher or lower than the actual results → The predi
 # ----------------------------
 # 6) Calculating RMSE, R², MAE
 ```{r}
-rmse_val <- RMSE(rf_pred, test_df$salary_scaled)
-r2_val <- R2(rf_pred, test_df$salary_scaled)
-mae_val <- MAE(rf_pred, test_df$salary_scaled)
-rf_mape <- mean(abs((y_test - rfr_preds) / y_test)) * 100
+rmse_val <- RMSE(rf_pred, test_data$salary_in_usd)
+r2_val <- R2(rf_pred, test_data$salary_in_usd)
+mae_val <- MAE(rf_pred, test_data$salary_in_usd)
+rf_mape <- mean(abs((y_test - rf_pred) / y_test)) * 100
 
 cat("📈 Random Forest Model Performance\n")
 cat("RMSE:", round(rmse_val, 2), "\n")
 cat("R²:", round(r2_val, 4), "\n")
 cat("MAE:", round(mae_val, 2), "\n")
 cat("MAPE:", round(rf_mape, 2), "\n")
-# Visualizing variable importance
 varImpPlot(rf_model, main = "Variable Importance (Random Forest)")
 ```
 When we used a random forest regression model to predict the salaries of data scientists, we found that the model's prediction accuracy was somewhat limited.
@@ -810,3 +798,289 @@ The RMSE of the model is approximately $50,704, and the MAE is approximately $40
 Variable Importance :
 According to the variable importance plot from our Random Forest model, experience level and job group are the most influential factors in predicting salary. Variables such as work model, company size, and employment type had minimal impact, indicating that role and seniority level are far more critical in compensation trends than where or how the job is performed.
 Therefore, it seems that the application of additional advanced modeling techniques will be necessary.
+
+
+# Converting dataset to classfication
+```{r}
+classification_salary <- cleaned_salaries
+```
+
+Converting Salaries into classification ranges. To determine the range we are using ranges that U.S. Bureau of Labor Statistics (BLS) use.  
+```{r}
+str(classification_salary)
+```
+U.S. Bureau of Labor Statistics (BLS) ranges:
+  - < $30,000 – Low income
+  - $30,000–$49,999 – Lower-middle income
+  - $50,000–$74,999 – Middle income
+  - $75,000–$99,999 – Upper-middle income
+  - $100,000+ – High income
+
+```{r}
+classification_salary$income_category <- cut(
+  classification_salary$salary_in_usd,
+  breaks = c(-Inf, 30000, 50000, 75000, 100000, Inf),
+  labels = c("Low income", "Lower-middle income", "Middle income", "Upper-middle income", "High income"),
+  right = FALSE
+)
+classification_salary$income_category <- as.factor(classification_salary$income_category)
+table(classification_salary$income_category)
+
+```
+
+```{r}
+classification_salary <- classification_salary[classification_salary$income_category != "Low income", ]
+
+classification_salary$income_category <- droplevels(classification_salary$income_category)
+
+table(classification_salary$income_category)
+```
+
+```{r, include=TRUE, echo=FALSE}
+str(classification_salary)
+```
+
+
+```{r}
+classification_salary <- classification_salary %>% select(-salary_in_usd)
+str(classification_salary)
+```
+
+
+```{r}
+train_data <- classification_salary[classification_salary$work_year < 2024, ]
+test_data  <- classification_salary[classification_salary$work_year == 2024, ]
+```
+
+```{r}
+library(nnet)
+model_multi <- multinom(income_category ~ job_title + experience_level + employment_type + work_models + company_size + work_year,
+                        data = train_data)
+```
+
+
+```{r}
+library(caret)
+predictions <- predict(model_multi, newdata = test_data)
+confusionMatrix(data = as.factor(predictions), reference = test_data$income_category)
+log_reg_acc <- confusionMatrix(data = as.factor(predictions), reference = test_data$income_category)$overall['Accuracy']
+```
+
+Trying Random Forest
+```{r}
+library(randomForest)
+library(caret)
+
+rf_model <- randomForest(
+  income_category ~ job_title + experience_level + employment_type + work_models + company_size + work_year,
+  data = train_data,
+  ntree = 2000,
+  importance = TRUE        
+)
+```
+
+```{r}
+rf_predictions <- predict(rf_model, newdata = test_data)
+confusionMatrix(rf_predictions, test_data$income_category)
+
+rf_acc <- confusionMatrix(rf_predictions, test_data$income_category)$overall['Accuracy']
+rf_acc
+```
+
+Using XGBoost
+```{r}
+library(xgboost)
+library(caret)
+library(data.table)
+```
+
+```{r}
+str(classification_salary)
+```
+
+```{r}
+train_data$income_category <- as.factor(train_data$income_category)
+test_data$income_category <- as.factor(test_data$income_category)
+
+#train_data$income_category <- as.numeric(train_data$income_category) - 1  # To start from 0
+#test_data$income_category <- as.numeric(test_data$income_category) - 1
+
+```
+
+```{r}
+train_matrix <- model.matrix(income_category ~ job_title + experience_level + employment_type + work_models + company_size - 1, data = train_data)
+test_matrix <- model.matrix(income_category ~ job_title + experience_level + employment_type + work_models + company_size - 1, data = test_data)
+
+dim(train_matrix)  # Check how many features
+```
+
+```{r}
+#set.seed(123)  # For reproducibility
+#library(caret)
+#library(xgboost)
+
+# Make sure the target is a factor
+#train_data$income_category <- as.factor(train_data$income_category)
+
+#train_control <- trainControl(
+#  method = "cv",
+#  number = 5,
+#  verboseIter = TRUE
+#)
+
+#xgb_grid <- expand.grid(
+#  nrounds = c(150, 300, 500),
+#  max_depth = c(6, 7, 15),
+#  eta = c(0.01, 0.1, 0),
+#  gamma = c(0),
+#  colsample_bytree = 0.8,
+#  min_child_weight = 1,
+#  subsample = 0.8
+#)
+
+#set.seed(123)
+#xgb_tuned <- train(
+#  income_category ~ .,
+#  data = train_data,
+#  method = "xgbTree",
+#  trControl = train_control,
+#  tuneGrid = xgb_grid,
+#  metric = "Accuracy"
+#)
+
+```
+Hyperparameter tuning for XGBoost shows that the best parameters are:
+- nrounds: 150
+- max_depth: 6
+- eta: 0.1
+- gamma: 0
+- colsample_bytree: 0.8
+- min_child_weight: 1
+- subsample: 0.8
+
+```{r}
+str(train_data)
+```
+
+```{r}
+xgb_trained <- train(
+  income_category ~ .,
+  data = train_data,
+  method = "xgbTree",
+  trControl = trainControl(method = "cv", number = 5),
+  tuneGrid = expand.grid(
+    nrounds = 150,
+    max_depth = 6,
+    eta = 0.1,
+    gamma = 0,
+    colsample_bytree = 0.8,
+    min_child_weight = 1,
+    subsample = 0.8
+  )
+)
+```
+
+```{r}
+xgb_trained
+```
+
+```{r}
+xgb_predictions <- predict(xgb_trained, newdata = test_data, type = "raw")
+xgb_predictions <- as.factor(xgb_predictions)
+```
+
+```{r}
+unique(test_data$income_category)
+unique(xgb_predictions)
+```
+
+```{r}
+confusionMatrix(xgb_predictions, as.factor(test_data$income_category))
+
+xgb_accuracy <- mean(xgb_predictions == test_data$income_category)
+print(paste("Accuracy:", xgb_accuracy))
+```
+
+```{r}
+importance_matrix <- xgb.importance(model = xgb_model)
+xgb.plot.importance(importance_matrix)
+```
+```{r}
+# Save the xgb_tuned model
+#saveRDS(xgb_trained, "xgb_tuned_model.rds")
+```
+
+```{r}
+# Install the e1071 package if not already installed
+#install.packages("e1071")
+#install.packages("caret")  # for evaluation
+#install.packages("data.table")  # for data manipulation (optional)
+
+# Load libraries
+library(e1071)
+library(caret)
+library(data.table)
+```
+
+```{r}
+train_data$income_category <- as.factor(train_data$income_category)
+test_data$income_category <- as.factor(test_data$income_category)
+```
+
+```{r}
+str(test_data)
+```
+
+```{r}
+naive_bayes_model <- naiveBayes(income_category ~ job_title + experience_level + employment_type + 
+                                work_models + company_size, data = train_data)
+
+# print(naive_bayes_model)
+```
+
+```{r}
+nb_predictions <- predict(naive_bayes_model, newdata = test_data)
+
+nb_predictions <- factor(nb_predictions, levels = levels(test_data$income_category))
+```
+
+```{r}
+confusionMatrix(nb_predictions, test_data$income_category)
+
+nb_accuracy <- mean(nb_predictions == test_data$income_category)
+print(paste("Accuracy:", nb_accuracy))
+```
+
+```{r}
+svc_model <- svm(income_category ~ job_title + experience_level + employment_type + 
+                 work_models + company_size, data = train_data, type = "C-classification", kernel = "radial")
+
+svc_predictions <- predict(svc_model, newdata = test_data)
+svc_predictions <- factor(svc_predictions, levels = levels(test_data$income_category))
+
+unique(svc_predictions)
+
+confusionMatrix(svc_predictions, test_data$income_category)
+
+svc_accuracy <- mean(svc_predictions == test_data$income_category)
+print(paste("Accuracy:", svc_accuracy))
+```
+
+```{r}
+model_accuracies <- data.frame(
+  Model = c("SVC", "Random Forest", "Logistic Regression", "XGBoost", "Naive Bayes"),
+  Accuracy = c(svc_accuracy, rf_acc, log_reg_acc, xgb_accuracy, nb_accuracy)
+)
+model_accuracies <- model_accuracies[order(-model_accuracies$Accuracy), ]
+model_accuracies
+
+```
+
+```{r}
+ggplot(model_accuracies, aes(x = Model, y = Accuracy)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(Accuracy, 6)), vjust = -0.5) +
+  labs(title = "Model Accuracies", x = "Model", y = "Accuracy") +
+  theme_minimal()
+```
+
