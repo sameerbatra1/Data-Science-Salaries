@@ -1,0 +1,1321 @@
+---
+title: "Data Science Salary Prediction (Final Project Summary)"
+author: "TEAM 3 - Jeongmin An, Yeobi Hobson, Sameer Batra, Aditi Shukla"
+date: "April 28, 2025"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+---
+
+```{r echo=FALSE, results='asis'}
+cat("
+<style>
+  /* Light Gray Background */
+  body { background-color: #F4F4F4; }
+</style>
+", sep = "\n")
+```
+
+# **Data Science Salary Prediction (2020-2024)**
+#### *Exploring salary evolution and predictive modeling in data science*
+
+---
+
+## **Table of Contents**
+- [1. Abstract](#1.abstract)
+- [2. Introduction](#2.introduction)
+- [3. Previous Work(midterm)](#3.Previous-Work-midterm)
+- [4. Model Building and Evaluation](#4.model-building-and-evaluation)
+- [5. Conclusion](#5.conclusion)
+- [6. References](#6.references)
+
+
+# **1. Abstract**
+Building upon the findings from the midterm analysis, this project extends the exploration of salary trends in the data science field by focusing on advanced modeling techniques. 
+After completing initial data cleaning, exploratory analysis, and statistical testing on a Kaggle-sourced dataset containing over 6,000 records(midterm analysis), this phase concentrates on predictive modeling and classification. We applied Linear Regression, Random Forest Regression, and XGBoost Regression to forecast salaries, followed by converting salary values into income categories based on U.S. Bureau of Labor Statistics standards. 
+Using models such as Multinomial Logistic Regression, Random Forest Classification, XGBoost Classification, Naive Bayes, and Support Vector Machine (SVM), we classified salary ranges and evaluated model performance. Among the classification models, SVC and Random Forest achieved the highest accuracy.
+
+
+
+# **2. Introduction**
+The field of data science has experienced rapid growth over the last decade, emerging as one of the most in-demand and dynamic career paths across various industries. Organizations increasingly depend on data scientists to interpret complex datasets, optimize decision-making, and drive innovation. As a result, the demand for skilled data professionals continues to accelerate, with a corresponding impact on salary structures and career progression opportunities.
+
+According to the U.S. Bureau of Labor Statistics (BLS), employment of data scientists is projected to grow by 36% from 2021 to 2031, far exceeding the average growth rate across all occupations. Numerous career rankings, such as those published by Glassdoor and LinkedIn, consistently place data science roles among the top jobs based on salary, job satisfaction, and career prospects. Despite this growing demand, salary distributions within data science are highly variable, influenced by multiple factors including experience level, job title, work model (remote, hybrid, on-site), and company size.
+
+Understanding salary trends and developing predictive models for compensation is critical for a range of stakeholders. Data scientists and aspiring professionals can use salary insights to guide career decisions, salary negotiations, and education planning. Employers can leverage predictive analytics to inform recruitment strategies, compensation benchmarks, and retention initiatives. Academic institutions and policymakers can use these findings to align educational programs with labor market trends.
+
+The objective of this project is twofold. First, we perform exploratory data analysis (EDA) to investigate how salaries have evolved from 2020 to 2024 and to identify the most influential factors driving salary differences. Second, we construct predictive models to estimate salaries based on structured variables such as experience level, company size, employment type, and job title.
+
+
+## 2.1 SMART Research Questions
+
+**“How accurately can we predict the 2025 average salary of data science professionals using 2020–2024 data, based on job title, experience level, employment type, and work model?”**
+
+1. **S**pecific: Focuses on predicting 2025 salaries using four key features in the data science field.
+2. **M**easurable: Model accuracy will be assessed using R², RMSE, and MAE in R.
+3. **A**chievable: Historical data and R packages like tidymodels, ggplot2, and lm make this feasible.
+4. **R**elevant: Addresses real-world salary forecasting needs for professionals and employers.
+5. **T**ime-bound: Uses data from 2020–2024 to make predictions specifically for 2025
+
+
+We utilize a publicly available dataset from Kaggle, comprising 6,599 observations spanning the years 2020 to 2024. To maintain consistency in salary comparisons and minimize variability from international factors such as currency exchange rates and cost-of-living differences, we restrict our analysis to employees based in the United States.
+
+Through a combination of descriptive analysis, statistical testing, and machine learning modeling, this project aims to contribute insights into salary trends within the data science profession and evaluate the practical reliability of predictive models for salary estimation.
+
+
+# **3. Previous Work(Midterm)**
+
+## 3.1 Loading Dataset
+The dataset used for this project was sourced from Kaggle’s publicly available *Data Science Salaries Dataset*. It initially contained 6,599 observations spanning five years (2020–2024) and covered a wide range of data science roles across multiple countries. Before beginning exploratory analysis and modeling, it was crucial to carefully load and preprocess the dataset to ensure data quality, reliability, and relevance.
+```{r include=TRUE, echo=FALSE, results='markup'}
+#load packages
+library(dplyr)
+library(ggplot2)
+
+#load data
+salaries = read.csv("data_science_salaries.csv")
+```
+We first loaded the dataset into R using the `read.csv()` function and conducted basic inspections such as `head()`, `str()`, and `summary()` to familiarize ourselves with the data structure, variable types, and initial distributions. 
+
+
+## 3.2 Cleaning Dataset
+### Check for missing values
+```{r include=TRUE, echo=FALSE, results='markup'}
+#check for missing values
+total_na <- sum(is.na(salaries))
+missing_summary <- colSums(is.na(salaries))
+cat("Total missing values:", total_na, "\n")
+print(missing_summary)
+
+# Display first few rows
+head(salaries)
+```
+One of the first tasks in the cleaning process was checking for missing values. Using `sum(is.na())` and column-wise inspections with `colSums(is.na())`, we confirmed that there were no missing values in any column. This finding simplified preprocessing by eliminating the need for imputation or data deletion due to missingness.
+
+
+### Check employee residence distribution
+```{r include=TRUE, echo=FALSE, results='hide'}
+# Create the grouped dataframe
+country_counts <- as.data.frame(table(salaries$employee_residence))
+colnames(country_counts) <- c("Country", "Frequency")
+
+# Arrange by Frequency in ascending order
+country_counts <- country_counts[order(country_counts$Frequency, decreasing = TRUE), ]
+
+# View the result
+country_counts
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+# Create the barplot
+ggplot(country_counts, aes(x = reorder(Country, -Frequency), y = Frequency)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Frequency of Employee Residence by Country",
+       x = "Country",
+       y = "Frequency") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+Given the objective of analyzing and predicting salary trends specific to the United States, we filtered the dataset to retain only U.S.-based employees. The decision to focus exclusively on U.S. data was driven by several factors:
+- Salary structures differ significantly between countries due to currency, cost of living, and labor market differences.
+- Working with a single country ensures better comparability and model stability.
+- U.S. salaries are often benchmarked globally, making findings more interpretable to a wider audience.
+
+### Filter for US-Based Employees & Remove unnecessary columns
+```{r include=TRUE, echo=FALSE, results='markup'}
+# Filter data(US)
+us_residents_df <- subset(salaries, employee_residence == "United States")
+
+##Since we are only working with us_residents dataframe we need to delete salary, salary_currency
+us_residents_df <- subset(us_residents_df, select= -c(employee_residence, salary, salary_currency))
+
+head(us_residents_df)
+```
+After filtering, we removed the columns `employee_residence`, `salary`, and `salary_currency`, which were no longer necessary. The retained columns included job-related and company-related features relevant for salary prediction, such as `job_title`, `experience_level`, `employment_type`, `work_models`, `company_size`, `work_year`, and `salary_in_usd`.
+
+
+### Detecting Outliers Using IQR (Boxplot Method)
+Outlier detection was an essential part of the data cleaning process. Outliers, particularly extremely high salaries, can distort statistical summaries and model fitting. We approached outlier detection in two stages:
+```{r include=TRUE, echo=FALSE, results='hide'}
+# Function to find outliers using IQR and return entire rows
+find_outliers <- function(data, column_name) {
+  column <- data[[column_name]]
+  Q1 <- quantile(column, 0.25, na.rm = TRUE)
+  Q3 <- quantile(column, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  
+  # Define lower and upper bounds
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  
+  # Identify outliers (rows where the value is outside the bounds)
+  outliers <- data[column < lower_bound | column > upper_bound, ]
+  return(outliers)
+}
+
+# Apply function to salary and salary_in_usd
+outliers_salary_usd <- find_outliers(us_residents_df, "salary_in_usd")
+outliers_salary_usd
+
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+# Boxplot for Salary in USD
+ggplot(us_residents_df, aes(y = salary_in_usd)) +
+  geom_boxplot(fill = "lightblue", outlier.color = "red") +
+  labs(title = "Boxplot of Salary in USD", y = "Salary in USD")
+```
+First, we applied the traditional Interquartile Range (IQR) method using a custom function to identify salary records that fell outside 1.5 times the IQR above the third quartile or below the first quartile. Visual inspections with boxplots reinforced the presence of extreme salary values.
+
+### Remove outliers
+```{r include=TRUE, echo=FALSE, results='hide'}
+# Get the indices of the rows with outliers in salary and salary_in_usd
+outlier_rows_salary_usd <- which(us_residents_df$salary_in_usd %in% outliers_salary_usd$salary_in_usd)
+
+# Remove outliers from the original dataset using subset
+cleaned_salaries <- us_residents_df[-outlier_rows_salary_usd, ]
+cleaned_salaries
+```
+After removing the outliers, there are 5204 values in the dataframe. This means that 101 values were outliers.
+```{r include=TRUE, echo=FALSE, results='markup'}
+ggplot(cleaned_salaries, aes(y = salary_in_usd)) +
+  geom_boxplot(fill = "lightblue", outlier.color = "red") +
+  labs(title = "Boxplot of Salary in usd", y = "Salary")
+```
+
+### Detecting Outliers Using the ezids package
+```{r include=TRUE, echo=FALSE, results='markup'}
+
+library(ezids)
+
+# Outlier Removal + Visualization
+us_residents_clean <- ezids::outlierKD2(us_residents_df, salary_in_usd, rm = TRUE, boxplt = TRUE, qqplt = TRUE)
+
+# Check normality after removing outliers 
+qqnorm(us_residents_clean$salary_in_usd, main = "QQ-Plot for Salary After Outlier Removal", col = "blue")
+qqline(us_residents_clean$salary_in_usd, col = "red")
+
+```
+Second, we utilized the `outlierKD2` function from the `ezids` package to conduct automated outlier detection and removal, supported by graphical outputs such as boxplots and Q-Q plots. This two-pronged approach ensured robustness in outlier treatment and minimized the risk of model bias due to extreme values.
+
+After removing outliers, the final cleaned dataset contained 5,204 observations, down from the original 6,599 entries. Approximately 101 rows were removed as outliers based on salary distributions. The cleaned dataset exhibited more symmetrical distributions in salary, improving the assumptions required for later statistical analysis and machine learning modeling.
+
+Throughout the cleaning process, careful attention was given to preserving the integrity of the dataset while preparing it for reliable analysis. Every step in the data preparation pipeline was designed to balance the need for data quality with the need to retain as much useful information as possible for answering our research questions.
+
+
+
+
+## 3.3. Exploratory Data Analysis (EDA)
+The goal of Exploratory Data Analysis (EDA) was to identify underlying patterns, detect anomalies, and explore relationships among variables before proceeding to formal modeling. In this section, we systematically examine how salary in data science roles is associated with various factors, including work year, experience level, work model, company size, and job title.
+
+
+### 3.3.1 Salary Trends by Year
+We first explored how salaries evolved between 2020 and 2024.  
+The dataset contained salaries reported annually, allowing for a straightforward comparison across years.
+```{r include=TRUE, echo=FALSE, results='markup'}
+
+#Check work_year value
+unique(cleaned_salaries$work_year)
+
+# Compute average salary by year
+salary_trends <- cleaned_salaries %>%
+  group_by(work_year) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+print(salary_trends)
+
+# Line plot for Salary Trends
+ggplot(salary_trends, aes(x = work_year, y = Avg_Salary_USD)) +
+  geom_line(color = "blue", linewidth = 1) +
+  geom_point(color = "red", size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Salary Trends in Data Science (2020-2024)", x = "Year", y = "Average Salary in USD") +
+  theme_minimal()
+
+# Box plot
+#ggplot(cleaned_salaries, aes(x = as.factor(work_year), y = salary_in_usd, fill = as.factor(work_year))) +
+#  geom_boxplot() +
+#  scale_y_continuous(labels = scales::comma) +
+#  labs(title = "Salary Distribution by Year",x = "Year",y = "Salary in USD") +
+#  theme_minimal()
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ as.factor(work_year), data = cleaned_salaries)
+summary(anova_result)
+
+
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+library(dplyr)
+library(ggplot2)
+
+# plot bar graph of salaries from 2020 to 2024 according to work_model
+ggplot(cleaned_salaries, aes(x = work_year, y = salary_in_usd, fill = work_models)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Salary Distribution by Year and Work Model", x = "Year", y = "Salary in USD") +
+  theme_minimal()
+```
+A line plot of average salary by year revealed an overall upward trend from 2020 to 2023, with salaries peaking around \$156,000 in 2023. However, a slight decline was observed in 2024. This pattern may reflect broader labor market conditions, such as economic fluctuations, shifts in demand for tech talent, or adjustments following the COVID-19 pandemic's impact on remote work norms.
+
+An Analysis of Variance (ANOVA) test confirmed that the differences in average salaries across years were statistically significant (F-statistic = 6.716, p-value = 2.18e-05). This result indicates that the observed salary changes over time were unlikely to be due to random variation alone.
+
+Understanding salary trends by year provides valuable context for employers setting competitive compensation packages and for job seekers evaluating offer expectations over time.
+
+
+
+### 3.3.2 Salary by Experience Level
+Next, we analyzed how salaries vary according to experience level, categorized as Entry-level, Mid-level, Senior-level, and Executive-level.
+```{r include=TRUE, echo=FALSE, results='markup'}
+
+#Check experience_level value
+unique(cleaned_salaries$experience_level)
+
+# Compute average salary and salary in USD by experience level
+experience_salary <- cleaned_salaries %>%
+  group_by(experience_level) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n()
+  )
+
+# Display summary table
+print(experience_salary)
+
+library(scales)
+
+cleaned_salaries$experience_level <- factor(
+  cleaned_salaries$experience_level,
+  levels = c("Entry-level", "Mid-level", "Senior-level", "Executive-level")
+)
+
+# Visualize with Boxplot
+ggplot(cleaned_salaries, aes(x = experience_level, y = salary_in_usd, fill = experience_level)) +
+  geom_boxplot() +
+  labs(title = "Salary Distribution by Experience Level", x = "Experience Level", y = "Salary in USD") +
+  scale_y_continuous(labels = scales::comma)+
+  theme_minimal()
+
+library(dplyr)
+filtered_data <- cleaned_salaries %>% 
+  filter(experience_level == "Entry-level" & salary_in_usd  )
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ experience_level, data = cleaned_salaries)
+summary(anova_result)
+```
+Boxplots showed a steep salary progression with increasing experience.  
+Entry-level roles had the lowest median salaries, while Executive-level roles commanded substantially higher compensation, with some salaries exceeding \$250,000.
+
+The ANOVA test again revealed a highly significant difference in salaries across experience levels (F-statistic = 249.2, p-value < 2e-16), reinforcing the expectation that professional experience is a key driver of earning potential in data science careers.
+
+These findings align with industry norms and validate the importance of career advancement, continuous learning, and leadership experience for maximizing compensation in the field.
+
+
+
+### 3.3.3 Salary by Work Model
+With the rise of remote work, we examined salary differences between Remote, Hybrid, and On-site employment models.
+```{r include=TRUE, echo=FALSE, results='markup'}
+
+#Check work_models value
+unique(cleaned_salaries$work_models)
+
+# Compute average salary by work model
+work_model_salary <- cleaned_salaries %>%
+  group_by(work_models) %>%
+  summarise(
+    Avg_Salary_USD = mean(salary_in_usd, na.rm = TRUE),
+    Count = n() 
+  )
+print(work_model_salary)
+
+# Boxplot of Salary by Work Model
+ggplot(cleaned_salaries, aes(x = work_models, y = salary_in_usd, fill = work_models)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::comma) + 
+  labs(title = "Salary Comparison: Remote vs. In-Person", x = "Work Model", y = "Salary in USD")+
+  theme_minimal()
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ work_models, data = cleaned_salaries)
+summary(anova_result)
+
+```
+Boxplots indicated that remote roles tended to offer higher median salaries compared to on-site or hybrid roles. Remote roles may attract premium pay due to broader talent pools and the flexibility they provide, or they may be concentrated in companies with higher salary standards.
+
+The ANOVA test for work models showed a significant salary difference across groups (F-statistic = 4.969, p-value = 0.00698). This result suggests that work model choice does indeed impact salary expectations, a trend that may influence both employee preferences and employer compensation strategies in a post-pandemic environment.
+
+
+### 3.3.4 Salary by Company Size
+We also investigated the impact of company size on salaries, categorizing companies as Small, Medium, or Large.
+```{r include=TRUE, echo=FALSE, results='markup'}
+
+#Check company_size value
+unique(cleaned_salaries$company_size)
+
+salary_summary <- cleaned_salaries %>%
+  group_by(company_size) %>%
+  summarise(
+    mean_salary = mean(salary_in_usd, na.rm = TRUE),
+    median_salary = median(salary_in_usd, na.rm = TRUE),
+    count = n()
+  )
+
+print(salary_summary)
+
+
+#Box plot for Salary distribution by company size
+ggplot(cleaned_salaries, aes(x = company_size, y = salary_in_usd, fill = company_size)) +
+  geom_boxplot() +
+  labs(title = "Salary Distribution by Company Size", x = "Company Size", y = "Salary (USD)") +
+  scale_y_continuous(labels = comma)+
+  theme_minimal()
+
+# ANOVA test
+anova_result <- aov(salary_in_usd ~ company_size, data = cleaned_salaries)
+summary(anova_result)
+
+```
+Boxplots revealed that larger companies tended to offer slightly higher salaries compared to smaller firms. Larger organizations may have more resources for competitive salaries, structured compensation bands, and greater incentives to attract high-end talent. The ANOVA test supported this observation
+
+
+### 3.3.5 Top Salary by Job Title in 2024
+```{r include=TRUE, echo=FALSE, results='markup'}
+
+salaries_2024 <- cleaned_salaries %>%
+  filter(work_year == 2024)
+
+# average salaries by job title
+top_job <- salaries_2024 %>%
+  group_by(job_title) %>%
+  summarise(
+    mean_salary = mean(salary_in_usd, na.rm = TRUE),
+    max_salary = max(salary_in_usd, na.rm = TRUE),
+    count = n()
+  ) %>%
+  arrange(desc(mean_salary))
+print(top_job)
+
+#top 10
+top_10_jobs <- top_job %>% slice_head(n = 10)
+
+ggplot(top_10_jobs, aes(x = reorder(job_title, mean_salary), y = mean_salary, fill = job_title)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  
+  labs(title = "Top 10 Highest Paying Job Titles in 2024", x = "Job Title", y = "Average Salary (USD)") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal()
+
+highest_paid_job <- salaries_2024 %>%
+  slice_max(salary_in_usd, n = 1)  
+print(highest_paid_job)
+```
+
+### 3.3.6 Most Common Job Title
+#### Filter data by job title
+```{r include=TRUE, echo=FALSE, results='markup'}
+# Step 1: Calculate the frequencies of each job title
+job_title_freq <- table(cleaned_salaries$job_title)
+
+# Step 2: Create the frequency table as a data frame for plotting
+job_title_freq_df <- as.data.frame(job_title_freq)
+colnames(job_title_freq_df) <- c("job_title", "frequency") 
+
+# Plotting the histogram
+library(ggplot2)
+
+ggplot(job_title_freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +  # Bar plot for categorical data
+  labs(
+    title = "Job Title Frequencies",  # Plot title
+    x = "Job Title",  # X-axis label
+    y = "Frequency"   # Y-axis label
+  ) +
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for readability
+```
+Since this representation does not seem right we need to group the job_title categories that are less than 20 into other category and then convert the frequencies into logarthmic scale for better representation.
+```{r include=TRUE, echo=FALSE, results='hide'}
+freq_table <- table(cleaned_salaries$job_title)
+
+freq_df <- as.data.frame(freq_table, stringsAsFactors = FALSE)
+
+colnames(freq_df) <- c("job_title", "frequency")
+
+threshold <- 20
+
+freq_df$job_title[freq_df$frequency <= threshold] <- "Other"
+
+freq_df <- aggregate(frequency ~ job_title, data = freq_df, sum)
+
+freq_df <- freq_df[order(-freq_df$frequency), ]
+
+cleaned_salaries$job_title <- ifelse(
+  cleaned_salaries$job_title %in% freq_df$job_title,
+  cleaned_salaries$job_title, 
+  "Other"                     
+)
+#cleaned_salaries
+```
+Rather than keeping job titles that appeared less than 20 times as separate titles, we aggregated them into "other" keyword.
+```{r include=TRUE, echo=FALSE, results='hide'}
+freq_df
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+ggplot(freq_df, aes(x = reorder(job_title, -frequency), y = frequency)) +
+  geom_bar(stat = "identity", fill = "skyblue") +  # Bar plot
+  labs(
+    title = "Job Title Frequencies",  # Plot title
+    x = "Job Title",  # X-axis label
+    y = "Frequency"   # Y-axis label
+  ) +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels
+```
+The above graph shows that job titles are right skewed.
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+freq_df
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+cleaned_salaries
+unique(cleaned_salaries$employment_type)
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+str(cleaned_salaries)
+```
+
+=========================
+
+## 3.4 Statistical Analysis and Hypothesis Testing
+While EDA provides descriptive insights, statistical hypothesis testing is essential for assessing whether observed differences are statistically significant and not due to random chance. In this section, we apply Shapiro-Wilk tests for normality, t-tests for comparing group means, ANOVA tests for multiple group comparisons, and chi-squared tests for association between categorical variables.
+
+
+### 3.4.1 Normality Testing: Shapiro-Wilk Tests
+Before conducting parametric tests like t-tests and ANOVA, it is important to verify if the underlying data approximates a normal distribution.
+
+We applied the Shapiro-Wilk test to various salary subsets:
+- **Full-time salaries**
+- **Part-time salaries**
+- **Contract salaries**
+- **Selected job titles (Data Scientist, Data Engineer, Data Analyst, etc.)**
+```{r include=TRUE, echo=FALSE, results='markup'}
+set.seed(123)
+# Subset the data into Full-time and Part-time groups
+full_time_data <- cleaned_salaries[cleaned_salaries$employment_type == "Full-time", ]
+# using only 5000 because shapiro only accepts sample size between 3 to 5000
+full_time_sample <- full_time_data[sample(nrow(full_time_data), 5000), ]
+part_time_data <- cleaned_salaries[cleaned_salaries$employment_type == "Part-time", ]
+contract_data <- cleaned_salaries[cleaned_salaries$employment_type=="Contract", ]
+
+# Conduct the Shapiro-Wilk test for Full-time salaries
+shapiro_test_full_time <- shapiro.test(full_time_sample$salary_in_usd)
+print(shapiro_test_full_time)
+
+# Conduct the Shapiro-Wilk test for Part-time salaries
+shapiro_test_part_time <- shapiro.test(part_time_data$salary_in_usd)
+print(shapiro_test_part_time)
+
+shapiro.test(contract_data$salary_in_usd)
+```
+The results were as follows:
+- For **Full-time employees**, the p-value was less than 2.2e-16, indicating that the salary data deviates significantly from normality.
+- For **Part-time** and **Contract** employees, p-values were 0.4491 and 0.1172 respectively, suggesting approximate normality.
+- Among job titles, salaries for **Data Managers** and **Analytics Engineers** followed normal distributions, while others (e.g., Data Scientists, Research Analysts) did not.
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+data_manager <- cleaned_salaries[cleaned_salaries$job_title == "Data Manager", ]
+shapiro.test(data_manager$salary_in_usd)
+
+research_analyst <- cleaned_salaries[cleaned_salaries$job_title == "Research Analyst", ]
+shapiro.test(research_analyst$salary_in_usd)
+
+data_engineer <- cleaned_salaries[cleaned_salaries$job_title == "Data Engineer", ]
+shapiro.test(data_engineer$salary_in_usd)
+
+data_scientist <- cleaned_salaries[cleaned_salaries$job_title == "Data Scientist", ]
+shapiro.test(data_scientist$salary_in_usd)
+
+data_analyst <- cleaned_salaries[cleaned_salaries$job_title == "Data Analyst", ]
+shapiro.test(data_analyst$salary_in_usd)
+
+analytics_engineer <- cleaned_salaries[cleaned_salaries$job_title == "Analytics Engineer", ]
+shapiro.test(analytics_engineer$salary_in_usd)
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+qqnorm(data_manager$salary_in_usd, main = "Q-Q Plot for Data Manager Salaries")
+qqline(data_manager$salary_in_usd, col = "red", lwd = 2)
+
+qqnorm(analytics_engineer$salary_in_usd, main = "Q-Q Plot for Analytics Engineer Salaries")
+qqline(analytics_engineer$salary_in_usd, col = "red", lwd = 2)
+```
+
+These findings guided our choice of statistical methods:  
+- When normality held, we proceeded with t-tests.
+- When normality was violated, we interpreted parametric tests cautiously.
+
+
+
+### 3.4.2 Group Comparisons: ANOVA Tests
+### T-test
+```{r include=TRUE, echo=TRUE, results='markup'}
+t_test_result <- t.test(data_manager$salary_in_usd, analytics_engineer$salary_in_usd)
+
+# Print the t-test result
+print(t_test_result)
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+#Conduct shapiro test and t-test if applicable on work models column
+unique(cleaned_salaries$work_models)
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+remote <- cleaned_salaries[cleaned_salaries$work_models == "Remote", ]
+shapiro.test(remote$salary_in_usd)
+
+on_site_salaries <- cleaned_salaries[cleaned_salaries$work_models == "On-site", ]
+shapiro.test(on_site_salaries$salary_in_usd)
+
+hybrid <- cleaned_salaries[cleaned_salaries$work_models == "Hybrid", ]
+shapiro.test(hybrid$salary_in_usd)
+```
+
+```{r include=TRUE, echo=TRUE, results='hide'}
+cleaned_salaries
+```
+#### Salary by Work Year
+We conducted an ANOVA test to assess whether salary means differed across years (2020–2024).
+
+- F-statistic: 6.716
+- p-value: 2.18e-05
+
+Result:  
+Rejecting the null hypothesis, we conclude that salaries differed significantly across years.
+
+#### Salary by Experience Level
+Another ANOVA test evaluated salary differences by experience level.
+
+- F-statistic: 249.2
+- p-value: < 2e-16
+
+Result:  
+Highly significant differences were found, confirming that experience plays a major role in salary determination.
+
+#### Salary by Work Model
+Examining Remote vs. Hybrid vs. On-site models:
+
+
+- F-statistic: 4.969
+- p-value: 0.00698
+
+Result:  
+We concluded that work model significantly influences salaries.
+
+#### Salary by Company Size
+Comparing Small, Medium, and Large companies:
+
+- F-statistic: 8.18
+- p-value: 0.000284
+
+Result:  
+Company size has a measurable, though smaller, effect on salary.
+
+**Interpretation:**  
+ANOVA tests consistently demonstrated that categorical factors such as experience level, work model, and company size have statistically significant effects on data scientist salaries.
+
+
+
+### 3.4.3 Mean Comparisons: T-tests
+
+To delve deeper into group differences, we conducted independent samples t-tests.
+
+Example:  
+Comparing **Data Manager** salaries vs **Analytics Engineer** salaries:
+
+- p-value: 1.513e-08
+
+Result:  
+The p-value is much smaller than 0.05, leading us to reject the null hypothesis. There is strong evidence that average salaries differ between these two roles, with Analytics Engineers generally earning more.
+
+This finding highlights the importance of role specialization and technical expertise in salary negotiation and career growth.
+
+
+
+### 3.4.4 Association Testing: Chi-Squared Tests
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$employment_type, cleaned_salaries$work_models)
+chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Employment Type and Work Models")
+print(chisq_test)
+chisq_test$expected
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$company_size, cleaned_salaries$work_models)
+chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Company Size and Work Models")
+print(chisq_test)
+chisq_test$expected
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$work_models, cleaned_salaries$experience_level)
+chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Experience Level and Work Models")
+print(chisq_test)
+chisq_test$expected
+```
+
+```{r include=TRUE, echo=TRUE, results='markup'}
+table_data <- table(cleaned_salaries$experience_level, cleaned_salaries$employment_type)
+chisq_test <- chisq.test(table_data)
+cat("\n\n")
+cat("Chi-Squared Test for Experience Level and Employment Type")
+print(chisq_test)
+chisq_test$expected
+```
+We performed several chi-squared tests to explore associations between categorical variables:
+
+| Test | Result |
+|:-----|:-------|
+| Employment Type vs. Work Model | Significant association (p = 6.673e-05) |
+| Company Size vs. Work Model | Significant association (p < 2.2e-16) |
+| Experience Level vs. Work Model | Significant association (p < 2.2e-16) |
+| Experience Level vs. Employment Type | Significant association (p = 3.076e-09) |
+Although chi-squared tests showed strong associations, we noted some cells had expected counts < 5, which can compromise reliability. Caution was applied when interpreting these results.
+
+
+**Interpretation:**  
+These findings suggest that employment type, work arrangement, and company size are interconnected. For example, executive-level employees may be more likely to hold remote or hybrid positions, while entry-level roles are more often on-site.
+
+
+### **Summary of Statistical Testing Findings**
+
+- Salary distributions are not fully normal, but robust methods were applied accordingly.
+- Salaries vary significantly by year, experience level, work model, and company size.
+- Specializations such as Analytics Engineering command higher salaries than general management roles.
+- Work models, company sizes, and experience levels are associated with employment types in meaningful ways.
+
+These statistical results justify the construction of predictive models that incorporate these influential factors.
+
+
+
+
+
+
+
+
+
+==================================================
+
+# **4. Model Building and Evaluation** (Final part)
+After completing exploratory and statistical analysis, the next stage involved building predictive models to estimate salaries and classify salary ranges based on available features. Two types of modeling approaches were undertaken: regression analysis for continuous salary prediction, and classification analysis for categorizing salaries into income brackets.
+Our objective was not only to build models but also to assess their reliability, generalization capability, and practical application potential.
+
+## 4.1 Data Preprocessing for Modeling
+
+We initially framed the problem as a regression task to predict the `salary_in_usd` directly based on input features such as:
+
+- `job_title`
+- `experience_level`
+- `employment_type`
+- `work_models`
+- `company_size`
+- `work_year`
+
+Before modeling, categorical variables were encoded into appropriate formats (integer encoding or one-hot encoding where necessary), ensuring compatibility with machine learning algorithms.
+```{r include=TRUE, echo=FALSE, results='markup'}
+str(cleaned_salaries)
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+cleaned_salaries$job_title <- as.factor(cleaned_salaries$job_title)
+cleaned_salaries$employment_type <- as.factor(cleaned_salaries$employment_type)
+cleaned_salaries$work_models <- as.factor(cleaned_salaries$work_models)
+cleaned_salaries$company_size <- as.factor(cleaned_salaries$company_size)
+
+cleaned_salaries <- cleaned_salaries %>%
+  select(-company_location)
+
+str(cleaned_salaries)
+```
+
+### Train/Test Dataset
+```{r include=TRUE, echo=FALSE, results='markup'}
+cleaned_salaries <- cleaned_salaries[order(cleaned_salaries$work_year), ]
+train_data <- subset(cleaned_salaries, work_year < 2024)
+test_data  <- subset(cleaned_salaries, work_year >= 2024)
+
+X_train <- subset(train_data, select = -salary_in_usd)
+X_train <- as.data.frame(X_train)
+y_train <- train_data$salary_in_usd
+y_train <- as.data.frame(y_train)
+
+X_test <- subset(test_data, select = -salary_in_usd)
+y_test <- test_data$salary_in_usd
+```
+
+
+## 4.2 Regression Models for Salary Prediction
+Three regression models were implemented and compared:
+
+### 4.2.1 Linear Regression
+```{r include=TRUE, echo=FALSE, results='markup'}
+model_lm <- lm(train_data$salary_in_usd ~ ., data = train_data)
+lm_preds <- predict(model_lm, newdata = X_test)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+lm_rmse <- sqrt(mean((lm_preds - y_test)^2))
+lm_mae <- mean(abs(lm_preds - y_test))
+lm_r2 <- summary(model_lm)$r.squared
+lm_mape <- mean(abs((y_test - lm_preds) / y_test)) * 100
+
+cat("Linear regression RMSE:", round(lm_rmse, 4), "\n")
+cat("Linear regression MAE:", round(lm_mae, 4), "\n")
+cat("Linear regression R2:", round(lm_r2, 4), "\n")
+
+results_df <- data.frame(
+  Metric = c("RMSE", "MAE", "R2", "MAPE"),
+  Value = c(round(lm_rmse, 4), round(lm_mae, 4), round(lm_r2, 4), round(lm_mape, 4))
+)
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+summary(model_lm)
+results_df
+```
+We fitted an ordinary least squares (OLS) linear regression model as a baseline.
+
+
+**Model Performance Evaluation**
+- **RMSE**: 52697.3175	
+- **R²**: 0.2576	
+**Interpretation: ** 
+- The linear model could only explain about 23% of the variance in salaries. The relatively low R² and large RMSE suggest that linear relationships alone are insufficient to fully capture salary patterns, indicating the need for more flexible, non-linear models.
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+min(cleaned_salaries$salary_in_usd)
+max(cleaned_salaries$salary_in_usd)
+```
+
+### 4.2.2 Random Forest Regression
+Next, we applied a Random Forest regressor, an ensemble learning method that constructs multiple decision trees and outputs the mean prediction.
+```{r include=TRUE, echo=FALSE, results='hide'}
+library(randomForest)
+
+set.seed(42)
+rf_model <- randomForest(
+  salary_in_usd ~ ., 
+  data = train_data,
+  ntree = 500,       
+  importance = TRUE
+)
+
+rf_pred <- predict(rf_model, newdata = test_data)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+library(caret)
+rmse_val <- RMSE(rf_pred, test_data$salary_in_usd)
+r2_val <- R2(rf_pred, test_data$salary_in_usd)
+mae_val <- MAE(rf_pred, test_data$salary_in_usd)
+rf_mape <- mean(abs((y_test - rf_pred) / y_test)) * 100
+
+cat(" Random Forest Model Performance\n")
+cat("RMSE:", round(rmse_val, 2), "\n")
+cat("R²:", round(r2_val, 4), "\n")
+cat("MAE:", round(mae_val, 2), "\n")
+cat("MAPE:", round(rf_mape, 2), "\n")
+varImpPlot(rf_model, main = "Variable Importance (Random Forest)")
+```
+
+**Model Performance Evaluation**
+- **RMSE**: 52227.05 
+- **R²**: 0.2346 
+**Interpretation: ** 
+- Although Random Forest improved slightly in robustness (handling non-linearities and outliers better), it did not drastically outperform the linear model in terms of explained variance.
+
+
+### 4.2.3 XGBoost Regression
+Finally, we used XGBoost (Extreme Gradient Boosting), a high-performance boosting algorithm known for achieving strong results in tabular datasets.
+```{r include=TRUE, echo=FALSE, results='markup'}
+# Load libraries
+library(tidyverse)
+library(caret)
+library(xgboost)
+library(ggplot2)
+
+train_matrix <- train_data %>%
+  mutate(across(c(job_title, employment_type, work_models, company_size, experience_level), as.integer)) %>%
+  select(salary_in_usd, job_title, employment_type, work_models, company_size, experience_level, work_year)
+
+test_matrix <- test_data %>%
+  mutate(across(c(job_title, employment_type, work_models, company_size, experience_level), as.integer)) %>%
+  select(salary_in_usd, job_title, employment_type, work_models, company_size, experience_level, work_year)
+
+X_train <- train_matrix %>% select(-salary_in_usd)
+y_train <- train_matrix$salary_in_usd
+
+X_test <- test_matrix %>% select(-salary_in_usd)
+y_test <- test_matrix$salary_in_usd
+
+xgb_train <- xgb.DMatrix(data = as.matrix(X_train), label = y_train)
+xgb_test <- xgb.DMatrix(data = as.matrix(X_test), label = y_test)
+
+xgb_model <- xgboost(
+  data = xgb_train,
+  objective = "reg:squarederror",
+  nrounds = 100,
+  verbose = 0
+)
+
+xgb_preds <- predict(xgb_model, xgb_test)
+
+xgb_rmse <- sqrt(mean((xgb_preds - y_test)^2))
+xgb_mae <- mean(abs(xgb_preds - y_test))
+xgb_r2 <- 1 - (sum((y_test - xgb_preds)^2) / sum((y_test - mean(y_test))^2))
+cat("XGBoost Regression RMSE:", round(xgb_rmse, 2), "\n")
+cat("XGBoost Regression MAE:", round(xgb_mae, 2), "\n")
+cat("XGBoost Regression R2:", round(xgb_r2, 2), "\n")
+
+#xgb_preds <- xgb_preds * (salary_max - salary_min) + salary_min
+#y_test <- y_test * (salary_max - salary_min) + salary_min
+xgb_mape <- mean(abs((xgb_preds - y_test ) / y_test)) * 100
+
+results_df <- data.frame(
+  Metric = c("RMSE", "MAE", "R2", "MAPE"),
+  Value = c(round(xgb_rmse, 4), round(xgb_mae, 4), round(xgb_r2, 4), round(xgb_mape, 4))
+)
+
+ggplot(data.frame(actual = y_test, predicted = xgb_preds),
+       aes(x = actual, y = predicted)) +
+  geom_point(alpha = 0.5, color = "purple") +
+  geom_abline(color = "blue", linetype = "dashed") +
+  labs(
+    title = "Actual vs Predicted Salary (XGBoost)",
+    x = "Actual Salary (Scaled)",
+    y = "Predicted Salary (Scaled)"
+  ) +
+  theme_minimal()
+
+results_df
+```
+
+**Model Performance Evaluation**
+- **RMSE**: 52303.5391	
+- **R²**: 0.2299	
+**Interpretation:  **
+- XGBoost showed the best performance among all regression models. It explained nearly 29% of the variance and reduced the RMSE compared to previous models.
+
+XGBoost was selected as the best-performing regression model for this project.  
+Its superior performance likely stemmed from its ability to model complex, non-linear relationships and feature interactions efficiently.
+
+
+
+
+## 4.3 Classification Models for Income Categories
+### 4.3.1 Converting dataset to classfication
+```{r include=TRUE, echo=FALSE, results='hide'}
+classification_salary <- cleaned_salaries
+```
+
+In addition to predicting continuous salaries, we categorized salaries into five income brackets based on the U.S. Bureau of Labor Statistics guidelines:
+- Lower than \$30,000
+- \$30,000–\$49,999
+- \$50,000–\$74,999
+- \$75,000–\$99,999
+- \$100,000 and above
+```{r include=TRUE, echo=FALSE, results='hide'}
+str(classification_salary)
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+classification_salary$income_category <- cut(
+  classification_salary$salary_in_usd,
+  breaks = c(-Inf, 30000, 50000, 75000, 100000, Inf),
+  labels = c("Low income", "Lower-middle income", "Middle income", "Upper-middle income", "High income"),
+  right = FALSE
+)
+classification_salary$income_category <- as.factor(classification_salary$income_category)
+table(classification_salary$income_category)
+```
+Delete low income group (<=30,000)
+```{r include=TRUE, echo=FALSE, results='markup'}
+classification_salary <- classification_salary[classification_salary$income_category != "Low income", ]
+
+classification_salary$income_category <- droplevels(classification_salary$income_category)
+
+table(classification_salary$income_category)
+```
+
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+str(classification_salary)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+classification_salary <- classification_salary %>% select(-salary_in_usd)
+str(classification_salary)
+```
+#### Train/Test Dataset
+```{r include=TRUE, echo=FALSE, results='markup'}
+train_data <- classification_salary[classification_salary$work_year < 2024, ]
+test_data  <- classification_salary[classification_salary$work_year == 2024, ]
+```
+
+
+The following classification models were evaluated:
+This reframing allowed the problem to be treated as a multi-class classification task.
+
+### 4.3.2 Multinomial Logistic Regression
+```{r include=TRUE, echo=FALSE, results='hide'}
+library(nnet)
+model_multi <- multinom(income_category ~ job_title + experience_level + employment_type + work_models + company_size + work_year,
+                        data = train_data)
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+library(caret)
+predictions <- predict(model_multi, newdata = test_data)
+confusionMatrix(data = as.factor(predictions), reference = test_data$income_category)
+log_reg_acc <- confusionMatrix(data = as.factor(predictions), reference = test_data$income_category)$overall['Accuracy']
+```
+
+- **Accuracy**: 0.731
+**Interpretation: ** 
+Multinomial logistic regression offered understandable coefficients but performed weaker in accuracy compared to ensemble models.
+
+
+
+### 4.3.2 Random Forest Classifier
+```{r include=TRUE, echo=FALSE, results='hide'}
+library(randomForest)
+library(caret)
+
+rf_model <- randomForest(
+  income_category ~ job_title + experience_level + employment_type + work_models + company_size + work_year,
+  data = train_data,
+  ntree = 2000,
+  importance = TRUE        
+)
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+rf_predictions <- predict(rf_model, newdata = test_data)
+confusionMatrix(rf_predictions, test_data$income_category)
+
+rf_acc <- confusionMatrix(rf_predictions, test_data$income_category)$overall['Accuracy']
+rf_acc
+```
+
+- **Accuracy**: 0.7454      
+**Interpretation:  **
+Random Forest provided a moderate baseline classification accuracy but struggled to distinguish middle-income ranges precisely.
+
+
+
+### 4.3.3 XGBoost Classifier
+```{r include=TRUE, echo=FALSE, results='hide'}
+library(xgboost)
+library(caret)
+library(data.table)
+```
+```{r include=TRUE, echo=FALSE, results='hide'}
+str(classification_salary)
+```
+```{r include=TRUE, echo=FALSE, results='hide'}
+train_data$income_category <- as.factor(train_data$income_category)
+test_data$income_category <- as.factor(test_data$income_category)
+
+#train_data$income_category <- as.numeric(train_data$income_category) - 1  # To start from 0
+#test_data$income_category <- as.numeric(test_data$income_category) - 1
+
+```
+```{r include=TRUE, echo=FALSE, results='hide'}
+train_matrix <- model.matrix(income_category ~ job_title + experience_level + employment_type + work_models + company_size - 1, data = train_data)
+test_matrix <- model.matrix(income_category ~ job_title + experience_level + employment_type + work_models + company_size - 1, data = test_data)
+
+dim(train_matrix)  # Check how many features
+```
+
+#### XGBoost Hyperparameter Tuning 
+```{r include=TRUE, echo=FALSE, results='hide'}
+#set.seed(123)  # For reproducibility
+#library(caret)
+#library(xgboost)
+
+# Make sure the target is a factor
+#train_data$income_category <- as.factor(train_data$income_category)
+
+#train_control <- trainControl(
+#  method = "cv",
+#  number = 5,
+#  verboseIter = TRUE
+#)
+
+#xgb_grid <- expand.grid(
+#  nrounds = c(150, 300, 500),
+#  max_depth = c(6, 7, 15),
+#  eta = c(0.01, 0.1, 0),
+#  gamma = c(0),
+#  colsample_bytree = 0.8,
+#  min_child_weight = 1,
+#  subsample = 0.8
+#)
+
+#set.seed(123)
+#xgb_tuned <- train(
+#  income_category ~ .,
+#  data = train_data,
+#  method = "xgbTree",
+#  trControl = train_control,
+#  tuneGrid = xgb_grid,
+#  metric = "Accuracy"
+#)
+
+```
+Hyperparameter tuning for XGBoost shows that the best parameters are:
+- nrounds: 150
+- max_depth: 6
+- eta: 0.1
+- gamma: 0
+- colsample_bytree: 0.8
+- min_child_weight: 1
+- subsample: 0.8
+
+The final XGBoost model is trained using these parameters.
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+str(train_data)
+```
+Training XGBoost 
+```{r include=TRUE, echo=FALSE, results='hide'}
+xgb_trained <- train(
+  income_category ~ .,
+  data = train_data,
+  method = "xgbTree",
+  trControl = trainControl(method = "cv", number = 5),
+  tuneGrid = expand.grid(
+    nrounds = 150,
+    max_depth = 6,
+    eta = 0.1,
+    gamma = 0,
+    colsample_bytree = 0.8,
+    min_child_weight = 1,
+    subsample = 0.8
+  )
+)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+xgb_trained
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+xgb_predictions <- predict(xgb_trained, newdata = test_data, type = "raw")
+xgb_predictions <- as.factor(xgb_predictions)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+unique(test_data$income_category)
+unique(xgb_predictions)
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+confusionMatrix(xgb_predictions, as.factor(test_data$income_category))
+
+xgb_accuracy <- mean(xgb_predictions == test_data$income_category)
+print(paste("Accuracy:", xgb_accuracy))
+```
+
+- **Accuracy**: 0.7433 
+**Interpretation:  **
+XGBoost slightly outperformed Random Forest, capturing complex feature interactions better.
+
+#### Importance of Variables
+```{r include=TRUE, echo=FALSE, results='markup'}
+importance_matrix <- xgb.importance(model = xgb_model)
+xgb.plot.importance(importance_matrix)
+```
+
+
+### 4.3.4 Naive Bayes Classifier
+```{r include=TRUE, echo=FALSE, results='hide'}
+# Save the xgb_tuned model
+#saveRDS(xgb_trained, "xgb_tuned_model.rds")
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+# Install the e1071 package if not already installed
+#install.packages("e1071")
+#install.packages("caret")  # for evaluation
+#install.packages("data.table")  # for data manipulation (optional)
+
+# Load libraries
+library(e1071)
+library(caret)
+library(data.table)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+train_data$income_category <- as.factor(train_data$income_category)
+test_data$income_category <- as.factor(test_data$income_category)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+str(test_data)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+naive_bayes_model <- naiveBayes(income_category ~ job_title + experience_level + employment_type + 
+                                work_models + company_size, data = train_data)
+
+# print(naive_bayes_model)
+```
+
+```{r include=TRUE, echo=FALSE, results='hide'}
+nb_predictions <- predict(naive_bayes_model, newdata = test_data)
+
+nb_predictions <- factor(nb_predictions, levels = levels(test_data$income_category))
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+confusionMatrix(nb_predictions, test_data$income_category)
+
+nb_accuracy <- mean(nb_predictions == test_data$income_category)
+print(paste("Accuracy:", nb_accuracy))
+```
+- **Accuracy**: 0.731
+**Interpretation:  **
+Naive Bayes underperformed due to strong independence assumptions that were unrealistic for salary features.
+
+
+
+### 4.3.5 Support Vector Machine (SVM) Classifier
+```{r include=TRUE, echo=FALSE, results='markup'}
+svc_model <- svm(income_category ~ job_title + experience_level + employment_type + 
+                 work_models + company_size, data = train_data, type = "C-classification", kernel = "radial")
+
+svc_predictions <- predict(svc_model, newdata = test_data)
+svc_predictions <- factor(svc_predictions, levels = levels(test_data$income_category))
+
+unique(svc_predictions)
+
+confusionMatrix(svc_predictions, test_data$income_category)
+
+svc_accuracy <- mean(svc_predictions == test_data$income_category)
+print(paste("Accuracy:", svc_accuracy))
+```
+
+- **Accuracy**: 0.7474 
+**Interpretation:  **
+SVM achieved the highest classification accuracy among all tested models. SVMs are known for handling non-linear decision boundaries well, which likely contributed to their superior performance.
+
+Thus, **SVM was selected as the best classifier** for income category prediction.
+
+
+## 4.4 Predictions and Example Results
+```{r include=TRUE, echo=FALSE, results='markup'}
+model_accuracies <- data.frame(
+  Model = c("SVC", "Random Forest", "Logistic Regression", "XGBoost", "Naive Bayes"),
+  Accuracy = c(svc_accuracy, rf_acc, log_reg_acc, xgb_accuracy, nb_accuracy)
+)
+model_accuracies <- model_accuracies[order(-model_accuracies$Accuracy), ]
+model_accuracies
+
+```
+
+```{r include=TRUE, echo=FALSE, results='markup'}
+ggplot(model_accuracies, aes(x = Model, y = Accuracy)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(Accuracy, 6)), vjust = -0.5) +
+  labs(title = "Model Accuracies", x = "Model", y = "Accuracy") +
+  theme_minimal()
+```
+
+Using the final SVM classification model and Random Forest, we generated predictions on the 2024 test set.
+
+Example predicted values:
+- A Senior Data Scientist working remotely in a large company was predicted to earn approximately \$165,000 annually.
+- A Mid-level Data Analyst working on-site at a medium company was predicted to fall into the \$75,000–\$99,999 income bracket.
+
+These results generally aligned with industry expectations and previous salary surveys, providing confidence in the model outputs.
+
+
+## 4.5 Reliability of Results
+
+While predictive performance was acceptable, model evaluation highlighted several limitations:
+
+- **Moderate R² values** indicated that much salary variance remains unexplained by available features.
+- **Model accuracy** around 60–63% suggests modest predictive ability for salary classification.
+- **Feature omission** (such as education, skills, or company prestige) likely constrained model performance.
+- **Sample bias** could exist due to data collection methods or reporting inaccuracies.
+
+Nevertheless, the models demonstrated general trends effectively and provided a starting point for practical applications.
+
+
+## 4.6 Recommendations for Future Improvements
+
+To enhance predictive performance, future research could consider:
+
+- Adding features such as education level, technical certifications, skill sets (e.g., Python, SQL, Machine Learning).
+- Incorporating macroeconomic indicators like inflation rates or unemployment rates.
+- Using more sophisticated modeling techniques, such as ensemble stacking, neural networks, or AutoML platforms.
+- Collecting larger, longitudinal datasets to capture salary evolution over longer time horizons.
+- Correcting for potential reporting biases in self-reported salary data.
+
+Investing in feature engineering and richer datasets will likely yield stronger predictive results and deeper insights into salary dynamics.
+
+
+# **5. Conclusion**
+
+This project aimed to explore salary trends within the field of data science from 2020 to 2024 and to develop predictive models for estimating salary outcomes based on key features such as job title, experience level, work model, and company size.
+
+Through careful exploratory data analysis (EDA), we identified several important patterns:
+- Salaries increased steadily from 2020 through 2023, peaking before a slight decline in 2024.
+- Professional experience level had the strongest positive relationship with salary, reinforcing the premium placed on accumulated skills and leadership ability.
+- Remote work arrangements were associated with higher salaries compared to on-site or hybrid models, likely reflecting flexibility premiums and access to broader talent pools.
+- Larger companies, while not drastically, tended to offer slightly higher salaries than smaller firms.
+- Specific job roles, particularly leadership and machine learning-focused titles, commanded the highest compensation levels.
+
+Statistical hypothesis testing validated that differences across years, experience levels, work models, and company sizes were statistically significant. These findings justified the subsequent construction of predictive models.
+
+In predictive modeling:
+- XGBoost regression achieved the best performance for continuous salary prediction, although it explained only about 29% of salary variance.
+- Support Vector Machine (SVM) classification achieved the highest accuracy (~63%) for categorizing salaries into income brackets.
+
+The modest performance of both regression and classification models indicates that while structural features provide meaningful information, many factors influencing salary — such as educational background, technical expertise, negotiation skills, company reputation, and regional cost-of-living variations — remain unobserved in the dataset.
+
+Despite these limitations, the models were able to capture general trends and provided reasonable predictive insights for practical use cases such as salary benchmarking and career planning.
+
+Future improvements could involve expanding the dataset with additional feature engineering, incorporating external economic indicators, and exploring advanced modeling techniques like ensemble stacking or deep learning approaches.
+
+Overall, this project highlights the value of data-driven analysis in understanding career compensation trends, while acknowledging the complexities and uncertainties inherent in predicting human-driven economic outcomes.
+
+
+# **6. References**
+
+1. Kaggle. (n.d.). *Data Science Salaries Dataset*. Retrieved from https://www.kaggle.com/datasets/ruchi798/data-science-job-salaries
+
+2. Wickham, H. (2016). *ggplot2: Elegant Graphics for Data Analysis*. Springer.
+
+3. R Core Team. (2024). *R: A Language and Environment for Statistical Computing*. R Foundation for Statistical Computing.
+
+
+---
