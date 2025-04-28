@@ -647,7 +647,6 @@ cleaned_salaries <- cleaned_salaries %>%
 str(cleaned_salaries)
 ```
 
-
 ```{r}
 cleaned_salaries <- cleaned_salaries[order(cleaned_salaries$work_year), ]
 train_data <- subset(cleaned_salaries, work_year < 2024)
@@ -662,6 +661,8 @@ X_test <- subset(test_data, select = -salary_in_usd)
 y_test <- test_data$salary_in_usd
 ```
 
+
+#linear regression
 ```{r}
 model_lm <- lm(train_data$salary_in_usd ~ ., data = train_data)
 lm_preds <- predict(model_lm, newdata = X_test)
@@ -693,7 +694,7 @@ max(cleaned_salaries$salary_in_usd)
 ```
 
 
-
+#XGBoost
 ```{r}
 # Load libraries
 library(tidyverse)
@@ -756,7 +757,8 @@ ggplot(data.frame(actual = y_test, predicted = xgb_preds),
 
 results_df
 ```
-Training a random forest regression model
+
+#Training a random forest regression model
 
 ```{r}
 library(randomForest)
@@ -851,6 +853,7 @@ str(classification_salary)
 train_data <- classification_salary[classification_salary$work_year < 2024, ]
 test_data  <- classification_salary[classification_salary$work_year == 2024, ]
 ```
+
 
 ```{r}
 library(nnet)
@@ -994,14 +997,14 @@ unique(test_data$income_category)
 unique(xgb_predictions)
 ```
 
-```{r}
+```{r include=TRUE, echo=FALSE, results='markup'}
 confusionMatrix(xgb_predictions, as.factor(test_data$income_category))
 
 xgb_accuracy <- mean(xgb_predictions == test_data$income_category)
 print(paste("Accuracy:", xgb_accuracy))
 ```
 
-```{r}
+```{r include=TRUE, echo=FALSE, results='markup'}
 importance_matrix <- xgb.importance(model = xgb_model)
 xgb.plot.importance(importance_matrix)
 ```
