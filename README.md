@@ -7,12 +7,12 @@ _Last updated: April 8, 2025_
 
 <h3>📅 Project Timeline/DEADLINE</h3>
 <ul>
-  <li><strong>April 10, 11PM</strong> ➜ Data preparation for modeling✅Completed   (<em>Yeobi</em>)</li>
+  <li><strong>April 10, 11PM</strong> ➜ Data preparation for modeling (✅Completed(<em>Yeobi</em>))</li>
   <li><strong>April 12, 11PM</strong> ➜ Create machine learning models ((✅completed)<em>Jeongmin & (✅completed)Aditi</em>)</li>
-  <li><strong>April 12, 11PM</strong> ➜ (maybe) Create MLP Regression model✅Completed   (<em>Yeobi</em>)</li>
-  <li><strong>April 14, 11PM</strong> ➜ Finalize and polish all modeling code ✅Completed(<em>Sameer</em>)</li>
-  <li><strong>April 16, 11PM</strong> ➜ Complete presentation slides and visuals ✅Completed(<em>Sameer & Aditi</em>)</li>
-  <li><strong>April 18, 11PM</strong> ➜ Submit final paper (10-page HTML summary) ✅Completed(<em>Yeobi & Jeongmin</em>)</li>
+  <li><strong>April 12, 11PM</strong> ➜ (maybe) Create MLP Regression model(✅Completed (<em>Yeobi</em>))</li>
+  <li><strong>April 14, 11PM</strong> ➜ Finalize and polish all modeling code (✅Completed(<em>Sameer</em>))</li>
+  <li><strong>April 16, 11PM</strong> ➜ Complete presentation slides and visuals (✅Completed(<em>Sameer & Aditi</em>))</li>
+  <li><strong>April 18, 11PM</strong> ➜ Submit final paper (10-page HTML summary) (✅Completed(<em>Yeobi & Jeongmin</em>))</li>
 </ul>
 
 
@@ -20,9 +20,9 @@ _Last updated: April 8, 2025_
 
 ## 📌 Final Project Timeline & Status
 
-| **Milestone**                           | **Deadline**           | **Status**         |
+| **Milestone**                           | **Deadline**           | **Status**           |
 |-----------------------------------------|-------------------------|---------------------|
-| Topic Proposal Submission               | April 16 (Wed) EOD      | ✅Completed        |
+| Topic Proposal Submission               | April 16 (Wed) EOD      | ✅Completed         |
 | Code + HTML Submission (RMD)            | April 23 (Wed) EOD      | ✅Completed         |
 | Team Presentation in Class              | April 23 (Wed) Class    | ✅Completed         |
 | Final Paper (10-page HTML Summary)      | April 30 (Wed) EOD      | ✅Completed         |
